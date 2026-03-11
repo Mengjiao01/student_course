@@ -18,6 +18,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+from enrollments import views as enrollment_views
 from users import views
 
 urlpatterns = [
@@ -33,5 +34,10 @@ urlpatterns = [
     path("student/", views.student_dashboard, name="student_dashboard"),
     path("teacher/", views.teacher_dashboard, name="teacher_dashboard"),
     path("admin-page/", views.admin_dashboard, name="admin_dashboard"),
+    path(
+        "api/enrollments/",
+        enrollment_views.create_enrollment,
+        name="create_enrollment",
+    ),
 
 ]
