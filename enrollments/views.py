@@ -7,6 +7,7 @@ from django.views.decorators.http import require_POST
 
 from courses.models import Course
 from users.models import Student
+from users.utils import get_user_role
 
 from .models import Enrollment
 
@@ -23,18 +24,8 @@ def _json_response(success, message, *, data=None, status=200, code=None):
     )
 
 
-def _get_user_role(user):
-    if user.is_superuser:
-        return "admin"
-
-    profile = getattr(user, "profile", None)
-    if profile is None:
-        return None
-
-    return profile.role
-
-
 def _get_course_id(request):
+    # Support both JSON clients and regular form posts with one endpoint.
     if request.content_type == "application/json":
         try:
             payload = json.loads(request.body.decode("utf-8") or "{}")
@@ -55,7 +46,7 @@ def create_enrollment(request):
             code="authentication_required",
         )
 
-    if _get_user_role(request.user) != "student":
+    if get_user_role(request.user) != "student":
         return _json_response(
             False,
             "Only students can enroll in courses.",
@@ -74,7 +65,8 @@ def create_enrollment(request):
             code="missing_course_id",
         )
 
-    #course check
+    # Lock the course row so the capacity check and insert stay consistent
+    # when multiple enrollment requests hit the same course at once.
     with transaction.atomic():
         course = Course.objects.select_for_update().filter(pk=course_id).first()
         if course is None:
@@ -85,7 +77,7 @@ def create_enrollment(request):
                 code="course_not_found",
             )
 
-        #avoid duplicate selections
+        # Short-circuit duplicates before attempting the insert.
         if Enrollment.objects.filter(student=student, course=course).exists():
             return _json_response(
                 False,
@@ -94,7 +86,7 @@ def create_enrollment(request):
                 code="duplicate_enrollment",
             )
 
-        #check cappacity
+        # Capacity is enforced inside the same transaction as the insert.
         if course.enrolled_count() >= course.capacity:
             return _json_response(
                 False,

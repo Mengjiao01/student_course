@@ -1,6 +1,8 @@
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
+from django.db.models import Count, Q
 from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -8,18 +10,8 @@ from courses.models import Course
 from enrollments.models import Enrollment
 
 from .forms import LoginForm
-from .models import Student
-
-
-def _get_user_role(user):
-    if user.is_superuser:
-        return "admin"
-
-    profile = getattr(user, "profile", None)
-    if profile is None:
-        return None
-
-    return profile.role
+from .models import Student, Teacher
+from .utils import get_user_role
 
 
 def _get_dashboard_url(role):
@@ -38,11 +30,13 @@ def login_view(request):
         password = form.cleaned_data["password"]
         selected_role = form.cleaned_data["role"]
 
+        # Authentication and role matching are checked separately so the UI
+        # can report wrong credentials differently from a wrong role choice.
         user = authenticate(request, username=username, password=password)
         if user is None:
             form.add_error(None, "Invalid username or password.")
         else:
-            actual_role = _get_user_role(user)
+            actual_role = get_user_role(user)
             if actual_role != selected_role:
                 form.add_error(None, "The selected role does not match this account.")
             else:
@@ -60,23 +54,11 @@ def logout_view(request):
 
 @login_required
 def dashboard_redirect(request):
-    role = _get_user_role(request.user)
+    role = get_user_role(request.user)
     if role is None:
         return redirect("login")
 
     return redirect(_get_dashboard_url(role))
-
-
-def _render_role_dashboard(request, role, title):
-    user_role = _get_user_role(request.user)
-    if user_role != role:
-        return HttpResponseForbidden("You do not have permission to access this page.")
-
-    return render(
-        request,
-        "users/dashboard.html",
-        {"page_title": title, "role": role, "user": request.user},
-    )
 
 
 def _handle_student_enrollment(request, student):
@@ -90,10 +72,13 @@ def _handle_student_enrollment(request, student):
     course = get_object_or_404(Course, pk=course_id)
 
     if action == "enroll":
+        # Reject duplicates before checking capacity so the feedback stays precise.
         if Enrollment.objects.filter(student=student, course=course).exists():
             messages.warning(request, "You are already enrolled in this course.")
             return
 
+        # The HTML flow enforces capacity here; the API path does the same inside
+        # an atomic transaction to stay safe under concurrent requests.
         if course.enrolled_count() >= course.capacity:
             messages.error(request, "This course is full and cannot accept more enrollments.")
             return
@@ -111,7 +96,7 @@ def _handle_student_enrollment(request, student):
 
 @login_required
 def student_dashboard(request):
-    if _get_user_role(request.user) != "student":
+    if get_user_role(request.user) != "student":
         return HttpResponseForbidden("You do not have permission to access this page.")
 
     student = get_object_or_404(Student, user=request.user)
@@ -125,7 +110,12 @@ def student_dashboard(request):
     if active_tab not in {"courses", "enrolled"}:
         active_tab = "courses"
 
-    all_courses = Course.objects.select_related("teacher__user").all().order_by("id")
+    # Load teacher data and enrollment totals up front to avoid N+1 queries in the template.
+    all_courses = (
+        Course.objects.select_related("teacher__user")
+        .annotate(enrolled_total=Count("enrollment"))
+        .order_by("id")
+    )
     enrolled_course_ids = set(
         Enrollment.objects.filter(student=student).values_list("course_id", flat=True)
     )
@@ -143,9 +133,85 @@ def student_dashboard(request):
 
 @login_required
 def teacher_dashboard(request):
-    return _render_role_dashboard(request, "teacher", "Teacher Dashboard")
+    if get_user_role(request.user) != "teacher":
+        return HttpResponseForbidden("You do not have permission to access this page.")
+
+    teacher = get_object_or_404(Teacher, user=request.user)
+    query = request.GET.get("q", "").strip()
+    sort = request.GET.get("sort", "name")
+
+    course_list = Course.objects.filter(teacher=teacher).annotate(
+        enrolled_total=Count("enrollment")
+    )
+    if query:
+        # Teachers can find courses by either the public course code or the title.
+        course_list = course_list.filter(
+            Q(course_name__icontains=query) | Q(course_code__icontains=query)
+        )
+
+    sort_map = {
+        "name": "course_name",
+        "name_desc": "-course_name",
+        "schedule": "schedule",
+        "schedule_desc": "-schedule",
+        "code": "course_code",
+        "code_desc": "-course_code",
+    }
+    # Fall back to name ordering if an unknown sort key is submitted.
+    course_list = course_list.order_by(sort_map.get(sort, "course_name"), "id")
+
+    return render(
+        request,
+        "users/teacher_dashboard.html",
+        {
+            "teacher": teacher,
+            "courses": course_list,
+            "query": query,
+            "sort": sort,
+        },
+    )
+
+
+@login_required
+def teacher_course_students(request, course_id):
+    if get_user_role(request.user) != "teacher":
+        return HttpResponseForbidden("You do not have permission to access this page.")
+
+    teacher = get_object_or_404(Teacher, user=request.user)
+    # Scope the course lookup by both id and teacher so one teacher cannot
+    # inspect another teacher's roster by guessing course ids.
+    course = get_object_or_404(Course, pk=course_id, teacher=teacher)
+    query = request.GET.get("q", "").strip()
+
+    enrollments = Enrollment.objects.filter(course=course).select_related(
+        "student__user"
+    ).order_by("student__student_id", "id")
+    if query:
+        # Search supports either the institutional student id or the login name.
+        enrollments = enrollments.filter(
+            Q(student__student_id__icontains=query)
+            | Q(student__user__username__icontains=query)
+        )
+
+    # Pagination keeps large rosters responsive without changing the search contract.
+    paginator = Paginator(enrollments, 10)
+    page_obj = paginator.get_page(request.GET.get("page"))
+
+    return render(
+        request,
+        "users/teacher_course_students.html",
+        {
+            "teacher": teacher,
+            "course": course,
+            "page_obj": page_obj,
+            "query": query,
+        },
+    )
 
 
 @login_required
 def admin_dashboard(request):
-    return _render_role_dashboard(request, "admin", "Admin Dashboard")
+    if get_user_role(request.user) != "admin":
+        return HttpResponseForbidden("You do not have permission to access this page.")
+
+    return render(request, "users/admin_dashboard.html", {"user": request.user})

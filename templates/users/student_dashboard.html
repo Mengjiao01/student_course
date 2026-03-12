@@ -147,7 +147,7 @@
                                                         {% endif %}
                                                     </td>
                                                     <td>{{ course.credits }}</td>
-                                                    <td>{{ course.enrolled_count }}/{{ course.capacity }}</td>
+                                                    <td>{{ course.enrolled_total }}/{{ course.capacity }}</td>
                                                     <td class="text-end">
                                                         <form method="post" class="d-inline">
                                                             {% csrf_token %}
@@ -190,7 +190,7 @@
                                                         {% endif %}
                                                     </td>
                                                     <td>{{ course.credits }}</td>
-                                                    <td>{{ course.enrolled_count }}/{{ course.capacity }}</td>
+                                                    <td>{{ course.enrolled_total }}/{{ course.capacity }}</td>
                                                     <td class="text-end">
                                                         {% if course.id in enrolled_course_ids %}
                                                             <span class="badge text-bg-secondary me-2">Enrolled</span>
@@ -210,9 +210,9 @@
                                                                 <button
                                                                     type="submit"
                                                                     class="btn btn-primary btn-sm"
-                                                                    {% if course.enrolled_count >= course.capacity %}disabled{% endif %}
+                                                                    {% if course.enrolled_total >= course.capacity %}disabled{% endif %}
                                                                 >
-                                                                    {% if course.enrolled_count >= course.capacity %}Full{% else %}Enroll{% endif %}
+                                                                    {% if course.enrolled_total >= course.capacity %}Full{% else %}Enroll{% endif %}
                                                                 </button>
                                                             </form>
                                                         {% endif %}

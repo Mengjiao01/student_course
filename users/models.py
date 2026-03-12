@@ -19,6 +19,9 @@ class Profile(models.Model):
 class Student(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     student_id = models.CharField(max_length=20, unique=True)
+    # Store major directly on the student record so roster pages can read it
+    # without introducing another profile table.
+    major = models.CharField(max_length=100, blank=True, default="")
 
     def __str__(self):
         return f"{self.user.username} - {self.student_id}"

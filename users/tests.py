@@ -1,10 +1,12 @@
+from datetime import date
+
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 
 from courses.models import Course
 from enrollments.models import Enrollment
-from users.models import Profile, Student
+from users.models import Profile, Student, Teacher
 
 
 class LoginViewTests(TestCase):
@@ -14,7 +16,11 @@ class LoginViewTests(TestCase):
             password="pass123456",
         )
         Profile.objects.create(user=self.student_user, role="student")
-        Student.objects.create(user=self.student_user, student_id="S001")
+        Student.objects.create(
+            user=self.student_user,
+            student_id="S001",
+            major="Computer Science",
+        )
 
         self.admin_user = User.objects.create_superuser(
             username="admin1",
@@ -75,7 +81,11 @@ class StudentDashboardTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="stu1", password="pass123456")
         Profile.objects.create(user=self.user, role="student")
-        self.student = Student.objects.create(user=self.user, student_id="S1001")
+        self.student = Student.objects.create(
+            user=self.user,
+            student_id="S1001",
+            major="Software Engineering",
+        )
         self.course = Course.objects.create(
             course_name="Python Programming",
             credits=3,
@@ -117,3 +127,110 @@ class StudentDashboardTests(TestCase):
         self.assertFalse(
             Enrollment.objects.filter(student=self.student, course=self.course).exists()
         )
+
+
+class TeacherDashboardTests(TestCase):
+    def setUp(self):
+        self.teacher_user = User.objects.create_user(
+            username="teacher1",
+            password="pass123456",
+        )
+        Profile.objects.create(user=self.teacher_user, role="teacher")
+        self.teacher = Teacher.objects.create(user=self.teacher_user, staff_id="T001")
+
+        self.other_teacher_user = User.objects.create_user(
+            username="teacher2",
+            password="pass123456",
+        )
+        Profile.objects.create(user=self.other_teacher_user, role="teacher")
+        self.other_teacher = Teacher.objects.create(
+            user=self.other_teacher_user,
+            staff_id="T002",
+        )
+
+        self.course_alpha = Course.objects.create(
+            course_code="CS101",
+            course_name="Algorithms",
+            schedule="Monday 09:00-11:00",
+            location="Room A101",
+            start_date=date(2026, 2, 16),
+            end_date=date(2026, 6, 20),
+            delivery_mode="lecture",
+            credits=3,
+            capacity=30,
+            teacher=self.teacher,
+        )
+        self.course_beta = Course.objects.create(
+            course_code="CS205",
+            course_name="Data Structures",
+            schedule="Wednesday 14:00-16:00",
+            location="Room B202",
+            start_date=date(2026, 2, 16),
+            end_date=date(2026, 6, 20),
+            delivery_mode="seminar",
+            credits=4,
+            capacity=25,
+            teacher=self.teacher,
+        )
+        Course.objects.create(
+            course_code="MATH300",
+            course_name="Linear Algebra",
+            credits=3,
+            capacity=20,
+            teacher=self.other_teacher,
+        )
+
+    def test_teacher_dashboard_lists_only_owned_courses(self):
+        self.client.login(username="teacher1", password="pass123456")
+
+        response = self.client.get(reverse("teacher_dashboard"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "My Courses")
+        self.assertContains(response, "Algorithms")
+        self.assertContains(response, "Data Structures")
+        self.assertNotContains(response, "Linear Algebra")
+
+    def test_teacher_dashboard_supports_search_and_sort(self):
+        self.client.login(username="teacher1", password="pass123456")
+
+        response = self.client.get(
+            reverse("teacher_dashboard"),
+            {"q": "CS205", "sort": "code"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Data Structures")
+        self.assertNotContains(response, "Algorithms")
+
+    def test_teacher_course_students_shows_course_details_and_students(self):
+        student_user = User.objects.create_user(username="alice", password="pass123456")
+        Profile.objects.create(user=student_user, role="student")
+        student = Student.objects.create(
+            user=student_user,
+            student_id="S1002",
+            major="Artificial Intelligence",
+        )
+        Enrollment.objects.create(student=student, course=self.course_alpha)
+
+        self.client.login(username="teacher1", password="pass123456")
+        response = self.client.get(
+            reverse("teacher_course_students", args=[self.course_alpha.id])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Student Roster")
+        self.assertContains(response, "CS101")
+        self.assertContains(response, "Monday 09:00-11:00")
+        self.assertContains(response, "alice")
+        self.assertContains(response, "S1002")
+        self.assertContains(response, "Artificial Intelligence")
+
+    def test_teacher_course_students_rejects_other_teachers_course(self):
+        self.client.login(username="teacher2", password="pass123456")
+
+        response = self.client.get(
+            reverse("teacher_course_students", args=[self.course_alpha.id])
+        )
+
+        self.assertEqual(response.status_code, 404)
