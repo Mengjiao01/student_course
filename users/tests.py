@@ -99,7 +99,29 @@ class StudentDashboardTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "View Courses")
+        self.assertContains(response, "Student Course Interface")
+        self.assertContains(response, "Enrolled Courses")
+        self.assertNotContains(response, "Python Programming")
+
+    def test_student_dashboard_shows_courses_after_selecting_courses_tab(self):
+        self.client.login(username="stu1", password="pass123456")
+
+        response = self.client.get(reverse("student_dashboard"), {"tab": "courses"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Course List")
         self.assertContains(response, "Python Programming")
+
+    def test_student_dashboard_stats_show_enrollment_count_and_total_credits(self):
+        Enrollment.objects.create(student=self.student, course=self.course)
+        self.client.login(username="stu1", password="pass123456")
+
+        response = self.client.get(reverse("student_dashboard"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Total Credits")
+        self.assertContains(response, ">1<", html=True)
+        self.assertContains(response, ">3<", html=True)
 
     def test_student_can_enroll_course(self):
         self.client.login(username="stu1", password="pass123456")

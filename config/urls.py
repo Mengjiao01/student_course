@@ -17,6 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+from courses import views as course_views
 from enrollments import views as enrollment_views
 from users import views
 
@@ -34,6 +35,21 @@ urlpatterns = [
         name="teacher_course_students",
     ),
     path("admin-page/", views.admin_dashboard, name="admin_dashboard"),
+    path(
+        "api/student/courses/",
+        course_views.student_course_list,
+        name="student_course_list",
+    ),
+    path(
+        "api/student/courses/<int:course_id>/",
+        course_views.student_course_detail,
+        name="student_course_detail",
+    ),
+    path(
+        "api/student/enrolled-courses/",
+        course_views.student_enrolled_course_list,
+        name="student_enrolled_course_list",
+    ),
     path(
         "api/enrollments/",
         enrollment_views.create_enrollment,

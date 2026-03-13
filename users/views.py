@@ -5,6 +5,8 @@ from django.core.paginator import Paginator
 from django.db.models import Count, Q
 from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.cache import never_cache
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 from courses.models import Course
 from enrollments.models import Enrollment
@@ -23,6 +25,8 @@ def _get_dashboard_url(role):
     return role_to_url[role]
 
 
+@never_cache
+@ensure_csrf_cookie
 def login_view(request):
     form = LoginForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
@@ -94,6 +98,7 @@ def _handle_student_enrollment(request, student):
         messages.warning(request, "You are not enrolled in this course.")
 
 
+@never_cache
 @login_required
 def student_dashboard(request):
     if get_user_role(request.user) != "student":
@@ -106,9 +111,9 @@ def student_dashboard(request):
         active_tab = request.POST.get("tab", "courses")
         return redirect(f"{request.path}?tab={active_tab}")
 
-    active_tab = request.GET.get("tab", "courses")
-    if active_tab not in {"courses", "enrolled"}:
-        active_tab = "courses"
+    active_tab = request.GET.get("tab", "")
+    if active_tab not in {"", "courses", "enrolled"}:
+        active_tab = ""
 
     # Load teacher data and enrollment totals up front to avoid N+1 queries in the template.
     all_courses = (
@@ -120,6 +125,7 @@ def student_dashboard(request):
         Enrollment.objects.filter(student=student).values_list("course_id", flat=True)
     )
     enrolled_courses = all_courses.filter(id__in=enrolled_course_ids)
+    total_credits = sum(course.credits for course in enrolled_courses)
 
     context = {
         "student": student,
@@ -127,6 +133,8 @@ def student_dashboard(request):
         "all_courses": all_courses,
         "enrolled_courses": enrolled_courses,
         "enrolled_course_ids": enrolled_course_ids,
+        "enrolled_course_count": len(enrolled_course_ids),
+        "total_credits": total_credits,
     }
     return render(request, "users/student_dashboard.html", context)
 
