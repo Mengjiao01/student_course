@@ -11,7 +11,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from courses.models import Course
 from enrollments.models import Enrollment
 
-from .forms import LoginForm
+from .forms import AdminCourseForm, LoginForm
 from .models import Student, Teacher
 from .utils import get_user_role
 
@@ -25,6 +25,24 @@ def _get_dashboard_url(role):
     return role_to_url[role]
 
 
+def _admin_only(request):
+    if get_user_role(request.user) != "admin":
+        return HttpResponseForbidden("You do not have permission to access this page.")
+    return None
+
+
+def _teacher_course_queryset():
+    return Course.objects.select_related("teacher__user").prefetch_related("teachers__user")
+
+
+def _course_admin_queryset():
+    return (
+        Course.objects.select_related("teacher__user")
+        .prefetch_related("teachers__user")
+        .annotate(enrolled_total=Count("enrollment", distinct=True))
+    )
+
+
 @never_cache
 @ensure_csrf_cookie
 def login_view(request):
@@ -34,8 +52,6 @@ def login_view(request):
         password = form.cleaned_data["password"]
         selected_role = form.cleaned_data["role"]
 
-        # Authentication and role matching are checked separately so the UI
-        # can report wrong credentials differently from a wrong role choice.
         user = authenticate(request, username=username, password=password)
         if user is None:
             form.add_error(None, "Invalid username or password.")
@@ -76,13 +92,10 @@ def _handle_student_enrollment(request, student):
     course = get_object_or_404(Course, pk=course_id)
 
     if action == "enroll":
-        # Reject duplicates before checking capacity so the feedback stays precise.
         if Enrollment.objects.filter(student=student, course=course).exists():
             messages.warning(request, "You are already enrolled in this course.")
             return
 
-        # The HTML flow enforces capacity here; the API path does the same inside
-        # an atomic transaction to stay safe under concurrent requests.
         if course.enrolled_count() >= course.capacity:
             messages.error(request, "This course is full and cannot accept more enrollments.")
             return
@@ -115,12 +128,7 @@ def student_dashboard(request):
     if active_tab not in {"", "courses", "enrolled"}:
         active_tab = ""
 
-    # Load teacher data and enrollment totals up front to avoid N+1 queries in the template.
-    all_courses = (
-        Course.objects.select_related("teacher__user")
-        .annotate(enrolled_total=Count("enrollment"))
-        .order_by("id")
-    )
+    all_courses = _course_admin_queryset().order_by("id")
     enrolled_course_ids = set(
         Enrollment.objects.filter(student=student).values_list("course_id", flat=True)
     )
@@ -148,11 +156,13 @@ def teacher_dashboard(request):
     query = request.GET.get("q", "").strip()
     sort = request.GET.get("sort", "name")
 
-    course_list = Course.objects.filter(teacher=teacher).annotate(
-        enrolled_total=Count("enrollment")
+    course_list = (
+        _teacher_course_queryset()
+        .filter(Q(teacher=teacher) | Q(teachers=teacher))
+        .annotate(enrolled_total=Count("enrollment", distinct=True))
+        .distinct()
     )
     if query:
-        # Teachers can find courses by either the public course code or the title.
         course_list = course_list.filter(
             Q(course_name__icontains=query) | Q(course_code__icontains=query)
         )
@@ -165,7 +175,6 @@ def teacher_dashboard(request):
         "code": "course_code",
         "code_desc": "-course_code",
     }
-    # Fall back to name ordering if an unknown sort key is submitted.
     course_list = course_list.order_by(sort_map.get(sort, "course_name"), "id")
 
     return render(
@@ -186,22 +195,23 @@ def teacher_course_students(request, course_id):
         return HttpResponseForbidden("You do not have permission to access this page.")
 
     teacher = get_object_or_404(Teacher, user=request.user)
-    # Scope the course lookup by both id and teacher so one teacher cannot
-    # inspect another teacher's roster by guessing course ids.
-    course = get_object_or_404(Course, pk=course_id, teacher=teacher)
+    course = get_object_or_404(_teacher_course_queryset().distinct(), pk=course_id)
+    if teacher not in course.teacher_list():
+        return HttpResponseForbidden("You do not have permission to access this page.")
+
     query = request.GET.get("q", "").strip()
 
     enrollments = Enrollment.objects.filter(course=course).select_related(
         "student__user"
     ).order_by("student__student_id", "id")
     if query:
-        # Search supports either the institutional student id or the login name.
         enrollments = enrollments.filter(
             Q(student__student_id__icontains=query)
             | Q(student__user__username__icontains=query)
+            | Q(student__user__first_name__icontains=query)
+            | Q(student__user__last_name__icontains=query)
         )
 
-    # Pagination keeps large rosters responsive without changing the search contract.
     paginator = Paginator(enrollments, 10)
     page_obj = paginator.get_page(request.GET.get("page"))
 
@@ -219,7 +229,195 @@ def teacher_course_students(request, course_id):
 
 @login_required
 def admin_dashboard(request):
-    if get_user_role(request.user) != "admin":
-        return HttpResponseForbidden("You do not have permission to access this page.")
+    forbidden_response = _admin_only(request)
+    if forbidden_response is not None:
+        return forbidden_response
 
     return render(request, "users/admin_dashboard.html", {"user": request.user})
+
+
+@login_required
+def admin_module_placeholder(request, module_name):
+    forbidden_response = _admin_only(request)
+    if forbidden_response is not None:
+        return forbidden_response
+
+    module_labels = {
+        "students": "Student Management",
+        "teachers": "Teacher Management",
+        "admins": "Administrator Management",
+    }
+    module_label = module_labels.get(module_name)
+    if module_label is None:
+        return redirect("admin_dashboard")
+
+    return render(
+        request,
+        "users/admin_module_placeholder.html",
+        {
+            "module_label": module_label,
+            "module_name": module_name,
+        },
+    )
+
+
+@login_required
+def admin_course_list(request):
+    forbidden_response = _admin_only(request)
+    if forbidden_response is not None:
+        return forbidden_response
+
+    query = request.GET.get("q", "").strip()
+    delivery_mode = request.GET.get("delivery_mode", "").strip()
+
+    courses = _course_admin_queryset().order_by("course_code", "id")
+    if query:
+        courses = courses.filter(
+            Q(course_code__icontains=query)
+            | Q(course_name__icontains=query)
+            | Q(location__icontains=query)
+            | Q(teacher__user__username__icontains=query)
+            | Q(teacher__user__first_name__icontains=query)
+            | Q(teacher__user__last_name__icontains=query)
+            | Q(teachers__user__username__icontains=query)
+            | Q(teachers__user__first_name__icontains=query)
+            | Q(teachers__user__last_name__icontains=query)
+        )
+    if delivery_mode:
+        courses = courses.filter(delivery_mode=delivery_mode)
+
+    courses = courses.distinct()
+    paginator = Paginator(courses, 10)
+    page_obj = paginator.get_page(request.GET.get("page"))
+
+    return render(
+        request,
+        "users/admin_course_list.html",
+        {
+            "page_obj": page_obj,
+            "query": query,
+            "delivery_mode": delivery_mode,
+            "delivery_mode_choices": Course.DELIVERY_MODE_CHOICES,
+        },
+    )
+
+
+@login_required
+def admin_course_create(request):
+    forbidden_response = _admin_only(request)
+    if forbidden_response is not None:
+        return forbidden_response
+
+    form = AdminCourseForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        course = form.save()
+        messages.success(request, f"Course {course.course_name} has been published.")
+        return redirect("admin_course_list")
+
+    return render(
+        request,
+        "users/admin_course_form.html",
+        {
+            "form": form,
+            "page_title": "Publish Course",
+            "submit_label": "Publish Course",
+            "is_edit": False,
+        },
+    )
+
+
+@login_required
+def admin_course_edit(request, course_id):
+    forbidden_response = _admin_only(request)
+    if forbidden_response is not None:
+        return forbidden_response
+
+    course = get_object_or_404(_course_admin_queryset(), pk=course_id)
+    form = AdminCourseForm(request.POST or None, instance=course)
+    if request.method == "POST" and form.is_valid():
+        course = form.save()
+        messages.success(request, f"Course {course.course_name} has been updated.")
+        return redirect("admin_course_detail", course_id=course.id)
+
+    return render(
+        request,
+        "users/admin_course_form.html",
+        {
+            "form": form,
+            "course": course,
+            "page_title": "Edit Course",
+            "submit_label": "Save Changes",
+            "is_edit": True,
+        },
+    )
+
+
+@login_required
+def admin_course_detail(request, course_id):
+    forbidden_response = _admin_only(request)
+    if forbidden_response is not None:
+        return forbidden_response
+
+    course = get_object_or_404(_course_admin_queryset(), pk=course_id)
+
+    teacher_query = request.GET.get("teacher_q", "").strip()
+    student_query = request.GET.get("student_q", "").strip()
+
+    teachers = course.teacher_list()
+    if teacher_query:
+        lowered_query = teacher_query.lower()
+        teachers = [
+            teacher for teacher in teachers
+            if lowered_query in teacher.staff_id.lower()
+            or lowered_query in teacher.display_name().lower()
+            or lowered_query in teacher.title.lower()
+            or lowered_query in teacher.department.lower()
+        ]
+    teacher_page_obj = Paginator(teachers, 5).get_page(request.GET.get("teacher_page"))
+
+    enrollments = Enrollment.objects.filter(course=course).select_related("student__user")
+    if student_query:
+        enrollments = enrollments.filter(
+            Q(student__student_id__icontains=student_query)
+            | Q(student__major__icontains=student_query)
+            | Q(student__user__username__icontains=student_query)
+            | Q(student__user__first_name__icontains=student_query)
+            | Q(student__user__last_name__icontains=student_query)
+        )
+    student_page_obj = Paginator(
+        enrollments.order_by("student__student_id", "id"),
+        8,
+    ).get_page(request.GET.get("student_page"))
+
+    return render(
+        request,
+        "users/admin_course_detail.html",
+        {
+            "course": course,
+            "teacher_page_obj": teacher_page_obj,
+            "student_page_obj": student_page_obj,
+            "teacher_query": teacher_query,
+            "student_query": student_query,
+        },
+    )
+
+
+@login_required
+def admin_teacher_detail(request, teacher_id):
+    forbidden_response = _admin_only(request)
+    if forbidden_response is not None:
+        return forbidden_response
+
+    teacher = get_object_or_404(Teacher.objects.select_related("user"), pk=teacher_id)
+    return render(request, "users/admin_teacher_detail.html", {"teacher": teacher})
+
+
+@login_required
+def admin_student_detail(request, student_id):
+    forbidden_response = _admin_only(request)
+    if forbidden_response is not None:
+        return forbidden_response
+
+    student = get_object_or_404(Student.objects.select_related("user"), pk=student_id)
+    return render(request, "users/admin_student_detail.html", {"student": student})
+

@@ -18,14 +18,20 @@ class Course(models.Model):
     location = models.CharField(max_length=100, blank=True, default="")
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
+    description = models.TextField(blank=True, default="")
     delivery_mode = models.CharField(
         max_length=20,
         choices=DELIVERY_MODE_CHOICES,
         default="lecture",
     )
     credits = models.PositiveIntegerField()
-    capacity = models.PositiveIntegerField()
+    capacity = models.PositiveIntegerField(default=50)
     teacher = models.ForeignKey(Teacher, on_delete=models.SET_NULL, null=True, blank=True)
+    teachers = models.ManyToManyField(
+        Teacher,
+        blank=True,
+        related_name="courses",
+    )
 
     def __str__(self):
         return self.course_code or self.course_name
@@ -37,3 +43,15 @@ class Course(models.Model):
         # Teacher pages present schedule and location as one compact label.
         parts = [part for part in [self.schedule, self.location] if part]
         return " | ".join(parts)
+
+    def teacher_list(self):
+        assigned_teachers = list(self.teachers.select_related("user").all())
+        if assigned_teachers:
+            return assigned_teachers
+        if self.teacher_id:
+            return [self.teacher]
+        return []
+
+    def teacher_names_display(self):
+        names = [teacher.display_name() for teacher in self.teacher_list()]
+        return ", ".join(filter(None, names))

@@ -70,10 +70,6 @@ def _get_requested_student(request, current_student):
 
 
 def _build_course_detail(course, *, is_enrolled):
-    teacher_name = ""
-    if course.teacher and course.teacher.user:
-        teacher_name = course.teacher.user.username
-
     enrolled_count = course.enrolled_total
     is_full = enrolled_count >= course.capacity
 
@@ -83,7 +79,7 @@ def _build_course_detail(course, *, is_enrolled):
         "id": course.id,
         "course_name": course.course_name,
         "credits": course.credits,
-        "teacher_name": teacher_name,
+        "teacher_name": course.teacher_names_display(),
         "enrolled_count": enrolled_count,
         "capacity": course.capacity,
         "is_enrolled": is_enrolled,
@@ -103,6 +99,7 @@ def student_course_list(request):
     )
     courses = (
         Course.objects.select_related("teacher__user")
+        .prefetch_related("teachers__user")
         .annotate(enrolled_total=Count("enrollment"))
         .order_by("id")
     )
@@ -134,6 +131,7 @@ def student_course_detail(request, course_id):
 
     course = (
         Course.objects.select_related("teacher__user")
+        .prefetch_related("teachers__user")
         .annotate(enrolled_total=Count("enrollment"))
         .filter(pk=course_id)
         .first()

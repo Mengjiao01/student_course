@@ -8,7 +8,8 @@ Function views
     1. Add an import:  from my_app import views
     2. Add a URL to urlpatterns:  path('', views.home, name='home')
 Class-based views
-    1. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
+    1. Add an import:  from other_app.views import Home
+    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
 Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
@@ -35,6 +36,37 @@ urlpatterns = [
         name="teacher_course_students",
     ),
     path("admin-page/", views.admin_dashboard, name="admin_dashboard"),
+    path(
+        "admin-page/modules/<slug:module_name>/",
+        views.admin_module_placeholder,
+        name="admin_module_placeholder",
+    ),
+    path("admin-page/courses/", views.admin_course_list, name="admin_course_list"),
+    path(
+        "admin-page/courses/create/",
+        views.admin_course_create,
+        name="admin_course_create",
+    ),
+    path(
+        "admin-page/courses/<int:course_id>/edit/",
+        views.admin_course_edit,
+        name="admin_course_edit",
+    ),
+    path(
+        "admin-page/courses/<int:course_id>/",
+        views.admin_course_detail,
+        name="admin_course_detail",
+    ),
+    path(
+        "admin-page/teachers/<int:teacher_id>/",
+        views.admin_teacher_detail,
+        name="admin_teacher_detail",
+    ),
+    path(
+        "admin-page/students/<int:student_id>/",
+        views.admin_student_detail,
+        name="admin_student_detail",
+    ),
     path(
         "api/student/courses/",
         course_views.student_course_list,

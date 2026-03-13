@@ -256,3 +256,54 @@ class TeacherDashboardTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 404)
+
+
+class AdminCourseListTests(TestCase):
+    def setUp(self):
+        self.admin_user = User.objects.create_superuser(
+            username="admin_search",
+            password="admin123456",
+            email="admin_search@example.com",
+        )
+        self.teacher_user = User.objects.create_user(
+            username="teacher_search",
+            password="pass123456",
+            first_name="Alice",
+            last_name="Wong",
+        )
+        Profile.objects.create(user=self.teacher_user, role="teacher")
+        self.teacher = Teacher.objects.create(user=self.teacher_user, staff_id="T100")
+        self.other_teacher_user = User.objects.create_user(
+            username="teacher_other",
+            password="pass123456",
+            first_name="Bob",
+            last_name="Li",
+        )
+        Profile.objects.create(user=self.other_teacher_user, role="teacher")
+        self.other_teacher = Teacher.objects.create(
+            user=self.other_teacher_user,
+            staff_id="T101",
+        )
+        self.matching_course = Course.objects.create(
+            course_code="CS301",
+            course_name="Distributed Systems",
+            location="Room 101",
+            credits=3,
+            teacher=self.teacher,
+        )
+        self.non_matching_course = Course.objects.create(
+            course_code="CS302",
+            course_name="Computer Networks",
+            location="Room 102",
+            credits=3,
+            teacher=self.other_teacher,
+        )
+
+    def test_admin_course_list_searches_by_teacher_name(self):
+        self.client.login(username="admin_search", password="admin123456")
+
+        response = self.client.get(reverse("admin_course_list"), {"q": "Alice"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.matching_course.course_name)
+        self.assertNotContains(response, self.non_matching_course.course_name)
