@@ -29,19 +29,19 @@
 
                     <div class="mb-3">
                         {# ID input #}
-                        <label class="form-label">{{ form.login_id.label }}</label>
+                        <label class="form-label" for="{{ form.login_id.id_for_label }}">{{ form.login_id.label }}</label>
                         {{ form.login_id }}
                     </div>
 
                     <div class="mb-3">
                         {# Password input #}
-                        <label class="form-label">{{ form.password.label }}</label>
+                        <label class="form-label" for="{{ form.password.id_for_label }}">{{ form.password.label }}</label>
                         {{ form.password }}
                     </div>
 
                     <div class="mb-4">
                         {# Role selector #}
-                        <label class="form-label">{{ form.role.label }}</label>
+                        <label class="form-label" for="{{ form.role.id_for_label }}">{{ form.role.label }}</label>
                         {{ form.role }}
                     </div>
 
