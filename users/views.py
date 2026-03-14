@@ -15,7 +15,7 @@ from .forms import AdminCourseForm, LoginForm
 from .models import Student, Teacher
 from .utils import get_user_role
 
-
+#user's role
 def _get_dashboard_url(role):
     role_to_url = {
         "student": "student_dashboard",
@@ -111,7 +111,7 @@ def dashboard_redirect(request):
 
 
 def _handle_student_enrollment(request, student):
-    # The dashboard uses one POST entry point for both enroll and withdraw actions.
+    #use one POST entry point for both enroll and withdraw actions
     action = request.POST.get("action")
     course_id = request.POST.get("course_id")
 
@@ -122,7 +122,7 @@ def _handle_student_enrollment(request, student):
     course = get_object_or_404(Course, pk=course_id)
 
     if action == "enroll":
-        # Prevent duplicate enrollments before checking remaining capacity.
+        #prevent duplicate enrollments before checking remaining capacity
         if Enrollment.objects.filter(student=student, course=course).exists():
             messages.warning(request, "You are already enrolled in this course.")
             return
@@ -135,7 +135,7 @@ def _handle_student_enrollment(request, student):
         messages.success(request, "Enrollment successful.")
         return
 
-    # Withdraw removes the student's enrollment record for the selected course.
+    #remove the student's enrollment record for the selected course
     deleted_count, _ = Enrollment.objects.filter(student=student, course=course).delete()
     if deleted_count:
         messages.success(request, "Course dropped successfully.")
@@ -152,7 +152,7 @@ def student_dashboard(request):
     student = get_object_or_404(Student, user=request.user)
 
     if request.method == "POST":
-        # After handling the action, redirect back to the current tab to avoid duplicate POSTs.
+        #redirect back to the current tab
         _handle_student_enrollment(request, student)
         active_tab = request.POST.get("tab", "courses")
         return redirect(f"{request.path}?tab={active_tab}")
@@ -293,7 +293,7 @@ def admin_module_placeholder(request, module_name):
         },
     )
 
-
+#verify
 @login_required
 def admin_course_list(request):
     forbidden_response = _admin_only(request)
