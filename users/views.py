@@ -3,7 +3,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Count, Q
-from django.http import HttpResponseForbidden
+from django.http import Http404, HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -29,6 +29,35 @@ def _admin_only(request):
     if get_user_role(request.user) != "admin":
         return HttpResponseForbidden("You do not have permission to access this page.")
     return None
+
+
+def _teacher_detail_payload(teacher):
+    return {
+        "title": "Teacher Details",
+        "fields": [
+            {"label": "Teacher ID", "value": teacher.staff_id},
+            {"label": "Teacher Name", "value": teacher.display_name()},
+            {"label": "Department", "value": teacher.department or "Not set"},
+            {"label": "Office Phone", "value": teacher.office_phone or "Not set"},
+            {"label": "Email", "value": teacher.user.email or "Not set"},
+            {"label": "Title", "value": teacher.title or "Not set"},
+        ],
+    }
+
+
+def _student_detail_payload(student):
+    return {
+        "title": "Student Details",
+        "fields": [
+            {"label": "Student ID", "value": student.student_id},
+            {"label": "Student Name", "value": student.display_name()},
+            {"label": "Major", "value": student.major or "Not set"},
+            {"label": "Phone", "value": student.phone or "Not set"},
+            {"label": "Email", "value": student.user.email or "Not set"},
+            {"label": "Year", "value": student.program_duration or "Not set"},
+            {"label": "Study Level", "value": student.get_level_display() or "Not set"},
+        ],
+    }
 
 
 def _teacher_course_queryset():
@@ -197,7 +226,7 @@ def teacher_course_students(request, course_id):
     teacher = get_object_or_404(Teacher, user=request.user)
     course = get_object_or_404(_teacher_course_queryset().distinct(), pk=course_id)
     if teacher not in course.teacher_list():
-        return HttpResponseForbidden("You do not have permission to access this page.")
+        raise Http404("Course not found.")
 
     query = request.GET.get("q", "").strip()
 
@@ -233,7 +262,7 @@ def admin_dashboard(request):
     if forbidden_response is not None:
         return forbidden_response
 
-    return render(request, "users/admin_dashboard.html", {"user": request.user})
+    return render(request, "users/admin_dashboard.html", {"user": request.user, "admin_id": request.user.profile.admin_id})
 
 
 @login_required
@@ -369,8 +398,6 @@ def admin_course_detail(request, course_id):
         teachers = [
             teacher for teacher in teachers
             if lowered_query in teacher.staff_id.lower()
-            or lowered_query in teacher.display_name().lower()
-            or lowered_query in teacher.title.lower()
             or lowered_query in teacher.department.lower()
         ]
     teacher_page_obj = Paginator(teachers, 5).get_page(request.GET.get("teacher_page"))
@@ -380,13 +407,10 @@ def admin_course_detail(request, course_id):
         enrollments = enrollments.filter(
             Q(student__student_id__icontains=student_query)
             | Q(student__major__icontains=student_query)
-            | Q(student__user__username__icontains=student_query)
-            | Q(student__user__first_name__icontains=student_query)
-            | Q(student__user__last_name__icontains=student_query)
         )
     student_page_obj = Paginator(
         enrollments.order_by("student__student_id", "id"),
-        8,
+        10,
     ).get_page(request.GET.get("student_page"))
 
     return render(
@@ -403,21 +427,21 @@ def admin_course_detail(request, course_id):
 
 
 @login_required
-def admin_teacher_detail(request, teacher_id):
+def admin_teacher_detail_modal(request, teacher_id):
     forbidden_response = _admin_only(request)
     if forbidden_response is not None:
         return forbidden_response
 
     teacher = get_object_or_404(Teacher.objects.select_related("user"), pk=teacher_id)
-    return render(request, "users/admin_teacher_detail.html", {"teacher": teacher})
+    return JsonResponse(_teacher_detail_payload(teacher))
 
 
 @login_required
-def admin_student_detail(request, student_id):
+def admin_student_detail_modal(request, student_id):
     forbidden_response = _admin_only(request)
     if forbidden_response is not None:
         return forbidden_response
 
     student = get_object_or_404(Student.objects.select_related("user"), pk=student_id)
-    return render(request, "users/admin_student_detail.html", {"student": student})
+    return JsonResponse(_student_detail_payload(student))
 

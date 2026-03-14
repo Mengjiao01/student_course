@@ -46,9 +46,9 @@ class LoginForm(forms.Form):
 
 class AdminCourseForm(forms.ModelForm):
     teacher_staff_ids = forms.CharField(
-        label="Teacher Staff IDs",
+        label="Teacher IDs",
         required=False,
-        help_text="Separate multiple staff IDs with commas.",
+        help_text="Separate multiple teacher IDs with commas.",
         widget=forms.TextInput(
             attrs={
                 "class": "form-control",
@@ -103,18 +103,14 @@ class AdminCourseForm(forms.ModelForm):
         }
         labels = {
             "course_name": "Course Name",
-            "course_code": "Course Code",
+            "course_code": "Course ID",
             "credits": "Credits",
             "schedule": "Class Schedule",
             "location": "Location",
             "start_date": "Term Start Date",
             "end_date": "Term End Date",
-            "delivery_mode": "Delivery Mode",
+            "delivery_mode": "Class Mode",
             "description": "Course Description",
-        }
-        help_texts = {
-            "start_date": "Use the format YYYY-MM-DD.",
-            "end_date": "Use the format YYYY-MM-DD.",
         }
 
     def __init__(self, *args, **kwargs):
@@ -168,3 +164,4 @@ class AdminCourseForm(forms.ModelForm):
         super().save_m2m()
         if hasattr(self, "_pending_teachers"):
             self.instance.teachers.set(self._pending_teachers)
+

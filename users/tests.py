@@ -307,3 +307,70 @@ class AdminCourseListTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.matching_course.course_name)
         self.assertNotContains(response, self.non_matching_course.course_name)
+
+
+class AdminDetailModalTests(TestCase):
+    def setUp(self):
+        self.admin_user = User.objects.create_superuser(
+            username="admin_modal",
+            password="admin123456",
+            email="admin_modal@example.com",
+        )
+        teacher_user = User.objects.create_user(
+            username="teacher_modal",
+            password="pass123456",
+            first_name="Mia",
+            last_name="Chen",
+            email="mia.chen@example.com",
+        )
+        student_user = User.objects.create_user(
+            username="student_modal",
+            password="pass123456",
+            first_name="Evan",
+            last_name="Liu",
+            email="evan.liu@example.com",
+        )
+        Profile.objects.create(user=teacher_user, role="teacher")
+        Profile.objects.create(user=student_user, role="student")
+        self.teacher = Teacher.objects.create(
+            user=teacher_user,
+            staff_id="T900",
+            department="Engineering",
+            office_phone="020-7946-0123",
+            title="Associate Professor",
+        )
+        self.student = Student.objects.create(
+            user=student_user,
+            student_id="S900",
+            major="Data Science",
+            phone="13800138000",
+            program_duration="4 years",
+            level="bachelor",
+        )
+
+    def test_admin_teacher_detail_modal_returns_json(self):
+        self.client.login(username="admin_modal", password="admin123456")
+
+        response = self.client.get(reverse("admin_teacher_detail_modal", args=[self.teacher.id]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["title"], "Teacher Details")
+        self.assertEqual(response.json()["fields"][0]["value"], "T900")
+        self.assertEqual(response.json()["fields"][3]["value"], "020-7946-0123")
+        self.assertEqual(response.json()["fields"][4]["value"], "mia.chen@example.com")
+        self.assertEqual(response.json()["fields"][5]["value"], "Associate Professor")
+        self.assertEqual(len(response.json()["fields"]), 6)
+
+    def test_admin_student_detail_modal_returns_json(self):
+        self.client.login(username="admin_modal", password="admin123456")
+
+        response = self.client.get(reverse("admin_student_detail_modal", args=[self.student.id]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["title"], "Student Details")
+        self.assertEqual(response.json()["fields"][0]["value"], "S900")
+        self.assertEqual(response.json()["fields"][3]["value"], "13800138000")
+        self.assertEqual(response.json()["fields"][4]["value"], "evan.liu@example.com")
+        self.assertEqual(response.json()["fields"][5]["value"], "4 years")
+        self.assertEqual(response.json()["fields"][6]["value"], "Bachelor")
+        self.assertEqual(len(response.json()["fields"]), 7)

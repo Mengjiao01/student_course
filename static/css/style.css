@@ -1,0 +1,419 @@
+﻿.page-admin-course-form {
+    background: #f7f4ef;
+}
+
+.page-admin-course-form .shell {
+    max-width: 980px;
+}
+
+.page-admin-course-form .panel {
+    border: 0;
+    border-radius: 20px;
+    box-shadow: 0 16px 48px rgba(67, 53, 41, 0.10);
+}
+
+.page-admin-course-form .invalid-feedback {
+    display: none;
+}
+
+.page-admin-course-form .form-control.is-invalid,
+.page-admin-course-form .form-control.is-invalid:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.12);
+}
+
+.page-admin-course-detail {
+    background: #f5f7fa;
+}
+
+.page-admin-course-detail .shell {
+    max-width: 1300px;
+}
+
+.page-admin-course-detail .panel {
+    border: 0;
+    border-radius: 20px;
+    box-shadow: 0 14px 40px rgba(44, 62, 80, 0.08);
+}
+
+.page-admin-course-detail .summary {
+    background: linear-gradient(135deg, #f2f7fb, #ecf0eb);
+}
+
+.page-admin-course-detail .summary-card {
+    height: 100%;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.78);
+    padding: 1rem 1.1rem;
+}
+
+.page-admin-course-detail .summary-label {
+    color: #6c757d;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.35rem;
+}
+
+.page-admin-course-detail .summary-value {
+    color: #18364a;
+    font-weight: 600;
+    line-height: 1.45;
+}
+
+.page-admin-course-detail .summary-mode-badge {
+    font-size: 1rem !important;
+    font-weight: 600;
+    line-height: 1.45;
+    padding: 0.7rem 1rem !important;
+}
+
+.page-admin-course-detail .table td,
+.page-admin-course-detail .table th {
+    vertical-align: middle;
+}
+
+.page-admin-course-detail .course-detail-search-input {
+    width: min(100%, 320px);
+    min-width: 320px;
+}
+
+.page-admin-course-detail .assigned-teachers-table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+.page-admin-course-detail .assigned-teachers-table th,
+.page-admin-course-detail .assigned-teachers-table td {
+    width: 25%;
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+.page-admin-course-detail .assigned-teachers-table td a {
+    display: inline-block;
+    max-width: 100%;
+}
+
+.page-admin-course-detail .enrolled-students-table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+.page-admin-course-detail .enrolled-students-table th,
+.page-admin-course-detail .enrolled-students-table td {
+    width: 25%;
+    text-align: center;
+}
+
+.page-admin-course-detail .enrolled-students-table td a {
+    display: inline-block;
+}
+
+.page-admin-course-detail .detail-modal .modal-content {
+    border: 0;
+    border-radius: 20px;
+    box-shadow: 0 18px 48px rgba(44, 62, 80, 0.14);
+}
+
+.page-admin-course-detail .detail-modal .modal-header,
+.page-admin-course-detail .detail-modal .modal-footer {
+    border-color: #e3e9ef;
+}
+
+.page-admin-course-detail .detail-modal-field + .detail-modal-field {
+    margin-top: 1rem;
+}
+
+.page-admin-course-detail .detail-modal-label {
+    color: #6c757d;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.3rem;
+}
+
+.page-admin-course-detail .detail-modal-value {
+    color: #18364a;
+    font-weight: 600;
+    line-height: 1.45;
+}
+
+.page-admin-teacher-detail,
+.page-admin-student-detail,
+.page-admin-module-placeholder {
+    background: #f7f8fb;
+}
+
+.page-admin-teacher-detail .shell,
+.page-admin-student-detail .shell,
+.page-admin-module-placeholder .shell {
+    max-width: 900px;
+}
+
+.page-admin-teacher-detail .panel,
+.page-admin-student-detail .panel,
+.page-admin-module-placeholder .panel {
+    border: 0;
+    border-radius: 20px;
+    box-shadow: 0 18px 48px rgba(44, 62, 80, 0.08);
+}
+
+.page-admin-dashboard {
+    background: linear-gradient(135deg, #f7f1e8, #eef4f8);
+    min-height: 100vh;
+}
+
+.page-admin-dashboard .shell {
+    max-width: 1200px;
+}
+
+.page-admin-dashboard .hero,
+.page-admin-dashboard .card-panel {
+    border: 0;
+    border-radius: 22px;
+    box-shadow: 0 18px 48px rgba(44, 62, 80, 0.10);
+}
+
+.page-admin-dashboard .hero {
+    background: linear-gradient(135deg, #17324d, #366a74);
+    color: #fff;
+}
+
+.page-admin-dashboard .module-card {
+    background: rgba(255, 255, 255, 0.92);
+}
+
+.page-admin-dashboard .module-card .badge {
+    background: #dcecf0;
+    color: #1f4b57;
+}
+
+.page-admin-course-list {
+    background: #f6f7fb;
+}
+
+.page-admin-course-list .shell {
+    max-width: 1380px;
+}
+
+.page-admin-course-list .panel {
+    border: 0;
+    border-radius: 20px;
+    box-shadow: 0 14px 40px rgba(44, 62, 80, 0.08);
+}
+
+.page-admin-course-list .hero {
+    background: linear-gradient(135deg, #16425b, #2f6690);
+    color: #fff;
+}
+
+.page-admin-course-list .table td,
+.page-admin-course-list .table th {
+    vertical-align: middle;
+    text-align: center;
+}
+
+.page-admin-course-list .action-cell {
+    min-width: 160px;
+}
+
+.page-admin-course-list .action-group {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.page-admin-course-list .action-btn {
+    width: 118px;
+    border-radius: 999px;
+    font-weight: 600;
+    padding: 0.42rem 0.9rem;
+}
+
+.page-admin-course-list .action-btn-primary {
+    background: #143d59;
+    border-color: #143d59;
+    color: #fff;
+}
+
+.page-admin-course-list .action-btn-primary:hover {
+    background: #0f3148;
+    border-color: #0f3148;
+    color: #fff;
+}
+
+.page-admin-course-list .action-btn-secondary {
+    background: transparent;
+    border: 1px solid #143d59;
+    color: #143d59;
+}
+
+.page-admin-course-list .action-btn-secondary:hover {
+    background: #143d59;
+    color: #fff;
+}
+
+.page-admin-course-list .publish-btn {
+    min-width: 180px;
+    border: 0;
+    border-radius: 999px;
+    padding: 0.8rem 1.5rem;
+    background: linear-gradient(135deg, #ffd166, #ff9f1c);
+    color: #17324d;
+    font-weight: 700;
+    box-shadow: 0 14px 28px rgba(255, 159, 28, 0.34);
+}
+
+.page-admin-course-list .publish-btn:hover {
+    background: linear-gradient(135deg, #ffe08a, #ffb347);
+    color: #10273b;
+    transform: translateY(-1px);
+    box-shadow: 0 18px 34px rgba(255, 159, 28, 0.4);
+}
+
+.page-admin-course-list .search-label {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.page-admin-course-list .search-control {
+    height: 48px;
+}
+
+.page-admin-course-list .search-submit-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+}
+
+.page-admin-course-list .search-submit-btn {
+    width: 148px;
+    height: 40px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.page-student-dashboard {
+    background: linear-gradient(180deg, #eef4fb 0%, #f8fbff 100%);
+}
+
+.page-student-dashboard .topbar {
+    background: #ffffff;
+    border-bottom: 1px solid #dbe3ec;
+}
+
+.page-student-dashboard .stats-card,
+.page-student-dashboard .toolbar-card,
+.page-student-dashboard .content-card {
+    border: 0;
+    border-radius: 1rem;
+    box-shadow: 0 12px 30px rgba(31, 56, 88, 0.08);
+}
+
+.page-student-dashboard .stats-card {
+    background: linear-gradient(135deg, #ffffff, #f2f7ff);
+}
+
+.page-student-dashboard .stats-label {
+    color: #6c7a89;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.page-student-dashboard .stats-value {
+    color: #153a5b;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.page-student-dashboard .tab-button {
+    min-width: 170px;
+    border-radius: 999px;
+    font-weight: 600;
+    padding: 0.75rem 1.25rem;
+}
+
+.page-student-dashboard .tab-button.active {
+    background: #0d6efd;
+    border-color: #0d6efd;
+    color: #ffffff;
+}
+
+.page-student-dashboard .tab-button.inactive {
+    background: #ffffff;
+    border-color: #cfd9e4;
+    color: #35516e;
+}
+
+.page-student-dashboard .tab-button.inactive:hover {
+    border-color: #0d6efd;
+    color: #0d6efd;
+}
+
+.page-student-dashboard .empty-state {
+    min-height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: linear-gradient(135deg, #fbfdff, #f0f5fb);
+}
+
+.page-student-dashboard .empty-state-copy {
+    max-width: 420px;
+}
+
+.page-student-dashboard .course-table th,
+.page-student-dashboard .course-table td {
+    vertical-align: middle;
+}
+
+.page-teacher-course-students {
+    background: #f6f7fb;
+}
+
+.page-teacher-course-students .shell,
+.page-teacher-dashboard .shell {
+    max-width: 1200px;
+}
+
+.page-teacher-course-students .panel,
+.page-teacher-dashboard .panel {
+    border: 0;
+    border-radius: 18px;
+    box-shadow: 0 14px 36px rgba(27, 55, 90, 0.08);
+}
+
+.page-teacher-course-students .summary {
+    background: linear-gradient(135deg, #f7fbff, #e8f0ff);
+}
+
+.page-teacher-course-students .table td,
+.page-teacher-course-students .table th,
+.page-teacher-dashboard .table td,
+.page-teacher-dashboard .table th {
+    vertical-align: middle;
+}
+
+.page-teacher-dashboard {
+    background: #f4f7fb;
+}
+
+.page-teacher-dashboard .hero {
+    background: linear-gradient(135deg, #123c69, #2f6f8f);
+    color: #fff;
+    border-radius: 18px;
+}
+
+.page-login .login-shell {
+    max-width: 420px;
+}

@@ -58,14 +58,14 @@ urlpatterns = [
         name="admin_course_detail",
     ),
     path(
-        "admin-page/teachers/<int:teacher_id>/",
-        views.admin_teacher_detail,
-        name="admin_teacher_detail",
+        "admin-page/teachers/<int:teacher_id>/modal/",
+        views.admin_teacher_detail_modal,
+        name="admin_teacher_detail_modal",
     ),
     path(
-        "admin-page/students/<int:student_id>/",
-        views.admin_student_detail,
-        name="admin_student_detail",
+        "admin-page/students/<int:student_id>/modal/",
+        views.admin_student_detail_modal,
+        name="admin_student_detail_modal",
     ),
     path(
         "api/student/courses/",

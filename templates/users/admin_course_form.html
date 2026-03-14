@@ -1,30 +1,27 @@
 ﻿<!DOCTYPE html>
+{% load static %}
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ page_title }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body { background: #f7f4ef; }
-        .shell { max-width: 980px; }
-        .panel { border: 0; border-radius: 20px; box-shadow: 0 16px 48px rgba(67, 53, 41, 0.10); }
-    </style>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
-<body>
+<body class="page-admin-course-form">
 <div class="container shell py-4 py-lg-5">
     <div class="d-flex justify-content-between align-items-center mb-4 gap-3 flex-wrap">
         <div>
             <a href="{% url 'admin_course_list' %}" class="text-decoration-none">&larr; Back to Course List</a>
             <h1 class="h3 mt-2 mb-1">{{ page_title }}</h1>
-            <div class="text-muted">Fill in the course details and bind one or more teachers by staff ID.</div>
+            
         </div>
         <a href="{% url 'logout' %}" class="btn btn-outline-secondary">Sign Out</a>
     </div>
 
     <div class="card panel">
         <div class="card-body p-4 p-lg-5">
-            <form method="post" novalidate>
+            <form method="post" novalidate data-course-form>
                 {% csrf_token %}
                 {% if form.non_field_errors %}
                     <div class="alert alert-danger">{{ form.non_field_errors }}</div>
@@ -35,6 +32,9 @@
                         <div class="col-12 {% if field.name == 'description' %}col-lg-12{% else %}col-lg-6{% endif %}">
                             <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
                             {{ field }}
+                            {% if field.name == 'teacher_staff_ids' %}
+                                <div class="invalid-feedback" id="teacher-ids-live-feedback">Use Teacher IDs in the format T12345678.</div>
+                            {% endif %}
                             {% if field.help_text %}
                                 <div class="form-text">{{ field.help_text }}</div>
                             {% endif %}
@@ -48,7 +48,7 @@
                 <div class="d-flex gap-2 mt-4">
                     <button type="submit" class="btn btn-dark">{{ submit_label }}</button>
                     {% if is_edit and course %}
-                        <a href="{% url 'admin_course_detail' course.id %}" class="btn btn-outline-secondary">Back to Details</a>
+                        <a href="{% url 'admin_course_detail' course.id %}" class="btn btn-outline-secondary">Course Details</a>
                     {% else %}
                         <a href="{% url 'admin_course_list' %}" class="btn btn-outline-secondary">Cancel</a>
                     {% endif %}
@@ -57,5 +57,8 @@
         </div>
     </div>
 </div>
+    <script src="{% static 'js/script.js' %}"></script>
 </body>
 </html>
+
+
