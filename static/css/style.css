@@ -1,4 +1,4 @@
-﻿.page-admin-course-form {
+.page-admin-course-form {
     background: #f7f4ef;
 }
 
@@ -73,7 +73,8 @@
     vertical-align: middle;
 }
 
-.page-admin-course-detail .course-detail-search-input {
+.page-admin-course-detail .course-detail-search-input,
+.page-teacher-course-students .course-detail-search-input {
     width: min(100%, 320px);
     min-width: 320px;
 }
@@ -86,7 +87,6 @@
 .page-admin-course-detail .assigned-teachers-table th,
 .page-admin-course-detail .assigned-teachers-table td {
     width: 25%;
-    text-align: center;
     overflow-wrap: anywhere;
 }
 
@@ -103,7 +103,6 @@
 .page-admin-course-detail .enrolled-students-table th,
 .page-admin-course-detail .enrolled-students-table td {
     width: 25%;
-    text-align: center;
 }
 
 .page-admin-course-detail .enrolled-students-table td a {
@@ -184,6 +183,13 @@
     background: rgba(255, 255, 255, 0.92);
 }
 
+.page-admin-dashboard .module-card .text-muted {
+    min-height: 4.5rem;
+    margin-bottom: 1rem;
+}
+
+
+
 .page-admin-dashboard .module-card .badge {
     background: #dcecf0;
     color: #1f4b57;
@@ -211,7 +217,6 @@
 .page-admin-course-list .table td,
 .page-admin-course-list .table th {
     vertical-align: middle;
-    text-align: center;
 }
 
 .page-admin-course-list .action-cell {
@@ -297,7 +302,6 @@
     display: inline-flex;
     justify-content: center;
     align-items: center;
-    text-align: center;
 }
 
 .page-student-dashboard {
@@ -382,7 +386,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    text-align: center;
     background: linear-gradient(135deg, #fbfdff, #f0f5fb);
 }
 
@@ -516,10 +519,14 @@
     background: linear-gradient(135deg, #f7fbff, #e8f0ff);
 }
 
-.page-teacher-course-students .table td,
-.page-teacher-course-students .table th,
-.page-teacher-dashboard .table td,
-.page-teacher-dashboard .table th {
+.page-teacher-course-students .roster-table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+.page-teacher-course-students .roster-table th,
+.page-teacher-course-students .roster-table td {
+    width: 25%;
     vertical-align: middle;
 }
 
@@ -572,7 +579,6 @@
 }
 
 .page-login .login-eyebrow {
-    text-align: center;
     letter-spacing: 0.18em;
     text-transform: uppercase;
     color: rgba(255, 255, 255, 0.78);

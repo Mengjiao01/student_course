@@ -142,9 +142,9 @@ class StudentDashboardTests(TestCase):
         response = self.client.get(reverse("student_dashboard"))
 
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["enrolled_course_count"], 1)
+        self.assertEqual(response.context["total_credits"], 3)
         self.assertContains(response, "Total Credits")
-        self.assertContains(response, ">1<", html=True)
-        self.assertContains(response, ">3<", html=True)
 
     def test_student_can_enroll_course(self):
         self.client.login(username="stu1", password="pass123456")
@@ -247,6 +247,32 @@ class TeacherDashboardTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Data Structures")
         self.assertNotContains(response, "Algorithms")
+
+    def test_teacher_dashboard_paginates_course_list_by_ten(self):
+        for index in range(11):
+            Course.objects.create(
+                course_code=f"CS3{index:02d}",
+                course_name=f"Paged Course {index:02d}",
+                schedule=f"Friday {index:02d}:00",
+                location=f"Room {index}",
+                credits=3,
+                delivery_mode="lecture",
+                capacity=30,
+                teacher=self.teacher,
+            )
+
+        self.client.login(username="teacher1", password="pass123456")
+
+        first_page = self.client.get(reverse("teacher_dashboard"), {"sort": "code"})
+        self.assertEqual(first_page.status_code, 200)
+        self.assertEqual(first_page.context["page_obj"].paginator.per_page, 10)
+        self.assertEqual(first_page.context["page_obj"].paginator.count, 13)
+        self.assertEqual(len(first_page.context["page_obj"].object_list), 10)
+
+        second_page = self.client.get(reverse("teacher_dashboard"), {"sort": "code", "page": 2})
+        self.assertEqual(second_page.status_code, 200)
+        self.assertEqual(second_page.context["page_obj"].number, 2)
+        self.assertEqual(len(second_page.context["page_obj"].object_list), 3)
 
     def test_teacher_course_students_shows_course_details_and_students(self):
         student_user = User.objects.create_user(username="alice", password="pass123456")
@@ -397,3 +423,7 @@ class AdminDetailModalTests(TestCase):
         self.assertEqual(response.json()["fields"][5]["value"], "4 years")
         self.assertEqual(response.json()["fields"][6]["value"], "Bachelor")
         self.assertEqual(len(response.json()["fields"]), 7)
+
+
+
+

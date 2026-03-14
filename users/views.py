@@ -245,13 +245,16 @@ def teacher_dashboard(request):
         "code_desc": "-course_code",
     }
     course_list = course_list.order_by(sort_map.get(sort, "course_name"), "id")
+    paginator = Paginator(course_list, 10)
+    page_obj = paginator.get_page(request.GET.get("page"))
 
     return render(
         request,
         "users/teacher_dashboard.html",
         {
             "teacher": teacher,
-            "courses": course_list,
+            "courses": page_obj.object_list,
+            "page_obj": page_obj,
             "query": query,
             "sort": sort,
         },
@@ -288,7 +291,6 @@ def teacher_course_students(request, course_id):
         request,
         "users/teacher_course_students.html",
         {
-            "teacher": teacher,
             "course": course,
             "page_obj": page_obj,
             "query": query,
@@ -302,7 +304,7 @@ def admin_dashboard(request):
     if forbidden_response is not None:
         return forbidden_response
 
-    return render(request, "users/admin_dashboard.html", {"user": request.user, "admin_id": request.user.profile.admin_id})
+    return render(request, "users/admin_dashboard.html", {"admin_id": request.user.profile.admin_id})
 
 
 @login_required
@@ -325,7 +327,6 @@ def admin_module_placeholder(request, module_name):
         "users/admin_module_placeholder.html",
         {
             "module_label": module_label,
-            "module_name": module_name,
         },
     )
 
@@ -484,4 +485,6 @@ def admin_student_detail_modal(request, student_id):
 
     student = get_object_or_404(Student.objects.select_related("user"), pk=student_id)
     return JsonResponse(_student_detail_payload(student))
+
+
 
