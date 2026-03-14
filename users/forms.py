@@ -12,19 +12,21 @@ class LoginForm(forms.Form):
         ("admin", "Admin"),
     ]
 
-    username = forms.CharField(
-        label="Username",
+    # Role-based account ID
+    login_id = forms.CharField(
+        label="ID",
         max_length=150,
         widget=forms.TextInput(
             attrs={
                 "class": "form-control",
-                "placeholder": "Enter your username",
+                "placeholder": "Enter your student, teacher, or admin ID",
                 "autocomplete": "off",
                 "autocapitalize": "none",
                 "spellcheck": "false",
             }
         ),
     )
+    # Account password
     password = forms.CharField(
         label="Password",
         widget=forms.PasswordInput(
@@ -35,6 +37,7 @@ class LoginForm(forms.Form):
             }
         ),
     )
+    # Selected login role
     role = forms.ChoiceField(
         label="Role",
         choices=ROLE_CHOICES,

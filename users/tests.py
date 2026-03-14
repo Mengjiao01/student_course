@@ -22,17 +22,28 @@ class LoginViewTests(TestCase):
             major="Computer Science",
         )
 
-        self.admin_user = User.objects.create_superuser(
+        self.teacher_user = User.objects.create_user(
+            username="teacher1",
+            password="teacher123456",
+        )
+        Profile.objects.create(user=self.teacher_user, role="teacher")
+        Teacher.objects.create(
+            user=self.teacher_user,
+            staff_id="T001",
+        )
+
+        self.admin_user = User.objects.create_user(
             username="admin1",
             password="admin123456",
             email="admin@example.com",
         )
+        Profile.objects.create(user=self.admin_user, role="admin", admin_id="A0000001")
 
     def test_student_login_success_redirects_to_student_dashboard(self):
         response = self.client.post(
             reverse("login"),
             {
-                "username": "student1",
+                "login_id": "S001",
                 "password": "pass123456",
                 "role": "student",
             },
@@ -40,23 +51,35 @@ class LoginViewTests(TestCase):
 
         self.assertRedirects(response, reverse("student_dashboard"))
 
+    def test_teacher_login_success_redirects_to_teacher_dashboard(self):
+        response = self.client.post(
+            reverse("login"),
+            {
+                "login_id": "T001",
+                "password": "teacher123456",
+                "role": "teacher",
+            },
+        )
+
+        self.assertRedirects(response, reverse("teacher_dashboard"))
+
     def test_login_rejects_wrong_password(self):
         response = self.client.post(
             reverse("login"),
             {
-                "username": "student1",
+                "login_id": "S001",
                 "password": "wrong-password",
                 "role": "student",
             },
         )
 
-        self.assertContains(response, "Invalid username or password.")
+        self.assertContains(response, "Invalid ID or password.")
 
     def test_login_rejects_role_mismatch(self):
         response = self.client.post(
             reverse("login"),
             {
-                "username": "student1",
+                "login_id": "S001",
                 "password": "pass123456",
                 "role": "teacher",
             },
@@ -64,11 +87,11 @@ class LoginViewTests(TestCase):
 
         self.assertContains(response, "The selected role does not match this account.")
 
-    def test_superuser_can_login_as_admin(self):
+    def test_admin_id_login_redirects_to_admin_dashboard(self):
         response = self.client.post(
             reverse("login"),
             {
-                "username": "admin1",
+                "login_id": "A0000001",
                 "password": "admin123456",
                 "role": "admin",
             },

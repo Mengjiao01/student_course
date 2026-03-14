@@ -1,5 +1,5 @@
 from django.contrib import messages
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Count, Q
@@ -12,10 +12,10 @@ from courses.models import Course
 from enrollments.models import Enrollment
 
 from .forms import AdminCourseForm, LoginForm
-from .models import Student, Teacher
+from .models import Profile, Student, Teacher
 from .utils import get_user_role
 
-#user's role
+# Role to dashboard mapping
 def _get_dashboard_url(role):
     role_to_url = {
         "student": "student_dashboard",
@@ -72,25 +72,61 @@ def _course_admin_queryset():
     )
 
 
+def _get_login_user(selected_role, login_id):
+    #Role-specific ID lookup
+    if selected_role == "student":
+        student = Student.objects.select_related("user").filter(student_id=login_id).first()
+        return student.user if student else None
+
+    if selected_role == "teacher":
+        teacher = Teacher.objects.select_related("user").filter(staff_id=login_id).first()
+        return teacher.user if teacher else None
+
+    profile = Profile.objects.select_related("user").filter(role="admin", admin_id=login_id).first()
+    return profile.user if profile else None
+
+
+def _get_login_user_by_any_id(login_id):
+    #Any-role ID lookup
+    student = Student.objects.select_related("user").filter(student_id=login_id).first()
+    if student:
+        return student.user
+
+    teacher = Teacher.objects.select_related("user").filter(staff_id=login_id).first()
+    if teacher:
+        return teacher.user
+
+    profile = Profile.objects.select_related("user").filter(admin_id=login_id).first()
+    return profile.user if profile else None
+
+
 @never_cache
 @ensure_csrf_cookie
 def login_view(request):
     form = LoginForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
-        username = form.cleaned_data["username"]
+        #Submitted credentials
+        login_id = form.cleaned_data["login_id"].strip()
         password = form.cleaned_data["password"]
         selected_role = form.cleaned_data["role"]
 
-        user = authenticate(request, username=username, password=password)
-        if user is None:
-            form.add_error(None, "Invalid username or password.")
+        
+        user = _get_login_user(selected_role, login_id)
+        if user is not None:
+            #cheak password
+            if not user.check_password(password):
+                form.add_error(None, "Invalid ID or password.")
+            else:
+                
+                login(request, user)
+                return redirect(_get_dashboard_url(selected_role))
         else:
-            actual_role = get_user_role(user)
-            if actual_role != selected_role:
+            #role mismatch fallback
+            user = _get_login_user_by_any_id(login_id)
+            if user is not None and user.check_password(password):
                 form.add_error(None, "The selected role does not match this account.")
             else:
-                login(request, user)
-                return redirect(_get_dashboard_url(actual_role))
+                form.add_error(None, "Invalid ID or password.")
 
     return render(request, "users/login.html", {"form": form})
 
