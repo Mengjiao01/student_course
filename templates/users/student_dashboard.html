@@ -11,37 +11,60 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body class="page-student-dashboard">
-    <nav class="topbar py-3">
-        <div class="container-fluid px-4 d-flex justify-content-between align-items-center">
-            <div>
-                <h1 class="h4 mb-1">Student Course Interface</h1>
-                <div class="text-muted small">Student ID: {{ student.student_id }}</div>
+    <div class="container shell py-4 py-lg-5">
+        <div class="hero p-4 p-lg-5 mb-4">
+            <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 align-items-lg-center">
+                <div>
+                    <div class="text-white-50 small mb-2">Student Module</div>
+                    <h1 class="h3 mb-2">Course Dashboard</h1>
+                    <p class="mb-0 text-white-50">Browse available courses, review your schedule, and manage enrollment in one place.</p>
+                </div>
+                <div class="text-lg-end">
+                    <div class="fw-semibold">{{ request.user.username }}</div>
+                    <div class="small text-white-50">Student ID: {{ student.student_id }}</div>
+                    <a href="{% url 'logout' %}" class="btn btn-light btn-sm mt-3">Sign Out</a>
+                </div>
             </div>
-            <a href="{% url 'logout' %}" class="btn btn-outline-danger">Sign Out</a>
         </div>
-    </nav>
 
-    <div class="container-fluid px-4 py-4">
-        <div class="row g-4 mb-4">
-            <div class="col-12 col-md-6">
-                <div class="card stats-card">
+        <div class="row g-4 mb-4 stats-row">
+            <div class="col-12 col-md-6 col-xl-3">
+                <div class="card stats-card h-100">
                     <div class="card-body p-4">
                         <div class="stats-label mb-2">Enrolled Courses</div>
                         <div class="stats-value">{{ enrolled_course_count }}</div>
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-md-6">
-                <div class="card stats-card">
+            <div class="col-12 col-md-6 col-xl-3">
+                <div class="card stats-card h-100">
                     <div class="card-body p-4">
                         <div class="stats-label mb-2">Total Credits</div>
                         <div class="stats-value">{{ total_credits }}</div>
                     </div>
                 </div>
             </div>
+            <div class="col-12 col-md-6 col-xl-3">
+                <div class="card stats-card h-100">
+                    <div class="card-body p-4">
+                        <div class="stats-label mb-2">Available Courses</div>
+                        <div class="stats-value">{{ all_courses|length }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-xl-3">
+                <div class="card stats-card h-100">
+                    <div class="card-body p-4">
+                        <div class="stats-label mb-2">Current View</div>
+                        <div class="stats-value stats-value-sm">
+                            {% if active_tab == 'enrolled' %}Enrolled{% elif active_tab == 'courses' %}Courses{% else %}Overview{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="card toolbar-card mb-4">
+        <div class="card panel mb-4">
             <div class="card-body p-3 d-flex flex-column flex-md-row gap-3">
                 <a
                     href="{% url 'student_dashboard' %}?tab=courses"
@@ -58,8 +81,8 @@
             </div>
         </div>
 
-        <div class="card content-card">
-            <div class="card-body p-4 p-xl-5">
+        <div class="card panel">
+            <div class="card-body p-4">
                 {% if messages %}
                     {% for message in messages %}
                         <div class="alert alert-{{ message.tags|default:'info' }} mb-3" role="alert">
@@ -79,38 +102,54 @@
                         </div>
                     </div>
                 {% elif active_tab == "enrolled" %}
-                    <div class="mb-4">
-                        <h2 class="h4 mb-1">Enrolled Courses</h2>
-                        <p class="text-muted mb-0">
-                            Review the courses you have already selected and drop them if needed.
-                        </p>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h2 class="h5 mb-1">Enrolled Courses</h2>
+                            <p class="text-muted mb-0">Review the courses you have already selected and drop them if needed.</p>
+                        </div>
+                        <span class="text-muted small">{{ enrolled_courses|length }} course{{ enrolled_courses|length|pluralize }}</span>
                     </div>
 
                     {% if enrolled_courses %}
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle course-table">
+                            <table class="table table-hover align-middle mb-0 course-table">
                                 <thead class="table-light">
                                     <tr>
+                                        <th>Course ID</th>
                                         <th>Course Name</th>
-                                        <th>Instructor</th>
-                                        <th>Credits</th>
-                                        <th>Capacity</th>
+                                        <th>Time and Location</th>
+                                        <th>Class Mode</th>
+                                        <th class="text-center">Enrolled</th>
                                         <th class="text-end">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for course in enrolled_courses %}
                                         <tr>
-                                            <td>{{ course.course_name }}</td>
+                                            <td>{{ course.course_code|default:'-' }}</td>
                                             <td>
-                                                {% if course.teacher %}
-                                                    {{ course.teacher.user.username }}
-                                                {% else %}
-                                                    Unassigned
-                                                {% endif %}
+                                                {# Clicking the course name opens the detail modal for this course. #}
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-link course-detail-trigger p-0 text-start"
+                                                    data-course-detail-trigger
+                                                    data-course-detail-url="{% url 'student_course_detail' course.id %}"
+                                                >
+                                                    {{ course.course_name }}
+                                                </button>
+                                                <div class="text-muted small">
+                                                    {% if course.start_date or course.end_date %}
+                                                        {{ course.start_date|date:'Y-m-d'|default:'Not set' }} to {{ course.end_date|date:'Y-m-d'|default:'Not set' }}
+                                                    {% else %}
+                                                        Term dates not set
+                                                    {% endif %}
+                                                </div>
                                             </td>
-                                            <td>{{ course.credits }}</td>
-                                            <td>{{ course.enrolled_total }}/{{ course.capacity }}</td>
+                                            <td>
+                                                {{ course.meeting_display|default:'Not set' }}
+                                            </td>
+                                            <td>{{ course.get_delivery_mode_display }}</td>
+                                            <td class="text-center">{{ course.enrolled_total }}/{{ course.capacity }}</td>
                                             <td class="text-end">
                                                 <form method="post" class="d-inline" data-withdraw-form>
                                                     {% csrf_token %}
@@ -136,38 +175,52 @@
                         <div class="alert alert-secondary mb-0">You have not enrolled in any courses yet.</div>
                     {% endif %}
                 {% else %}
-                    <div class="mb-4">
-                        <h2 class="h4 mb-1">Course List</h2>
-                        <p class="text-muted mb-0">
-                            Browse all available courses and enroll directly from this page.
-                        </p>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h2 class="h5 mb-1">Course List</h2>
+                            <p class="text-muted mb-0">Browse all available courses and enroll directly from this page.</p>
+                        </div>
+                        <span class="text-muted small">{{ all_courses|length }} course{{ all_courses|length|pluralize }}</span>
                     </div>
 
                     {% if all_courses %}
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle course-table">
+                            <table class="table table-hover align-middle mb-0 course-table">
                                 <thead class="table-light">
                                     <tr>
+                                        <th>Course ID</th>
                                         <th>Course Name</th>
-                                        <th>Instructor</th>
-                                        <th>Credits</th>
-                                        <th>Enrolled / Capacity</th>
+                                        <th>Time and Location</th>
+                                        <th>Class Mode</th>
+                                        <th class="text-center">Enrolled</th>
                                         <th class="text-end">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for course in all_courses %}
                                         <tr>
-                                            <td>{{ course.course_name }}</td>
+                                            <td>{{ course.course_code|default:'-' }}</td>
                                             <td>
-                                                {% if course.teacher %}
-                                                    {{ course.teacher.user.username }}
-                                                {% else %}
-                                                    Unassigned
-                                                {% endif %}
+                                                {# Clicking the course name opens the detail modal for this course. #}
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-link course-detail-trigger p-0 text-start"
+                                                    data-course-detail-trigger
+                                                    data-course-detail-url="{% url 'student_course_detail' course.id %}"
+                                                >
+                                                    {{ course.course_name }}
+                                                </button>
+                                                <div class="text-muted small">
+                                                    {% if course.start_date or course.end_date %}
+                                                        {{ course.start_date|date:'Y-m-d'|default:'Not set' }} to {{ course.end_date|date:'Y-m-d'|default:'Not set' }}
+                                                    {% else %}
+                                                        Term dates not set
+                                                    {% endif %}
+                                                </div>
                                             </td>
-                                            <td>{{ course.credits }}</td>
-                                            <td>{{ course.enrolled_total }}/{{ course.capacity }}</td>
+                                            <td>{{ course.meeting_display|default:'Not set' }}</td>
+                                            <td>{{ course.get_delivery_mode_display }}</td>
+                                            <td class="text-center">{{ course.enrolled_total }}/{{ course.capacity }}</td>
                                             <td class="text-end">
                                                 {% if course.id in enrolled_course_ids %}
                                                     <button type="button" class="btn btn-secondary btn-sm" disabled>
@@ -202,6 +255,44 @@
             </div>
         </div>
     </div>
+    {# Shared modal for confirming a drop action. #}
+    <div class="modal fade student-withdraw-modal" id="withdrawConfirmModal" tabindex="-1" aria-labelledby="withdrawConfirmLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title h5 mb-0" id="withdrawConfirmLabel">Confirm Course Drop</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2">Are you sure you want to drop this course?</p>
+                    <div class="withdraw-course-name" id="withdrawConfirmCourseName">-</div>
+                    <p class="text-muted small mb-0 mt-3">This action will remove the course from your enrolled list.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="withdrawConfirmSubmit">Confirm Drop</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {# Shared modal for student course details. #}
+    <div class="modal fade student-course-detail-modal" id="studentCourseDetailModal" tabindex="-1" aria-labelledby="studentCourseDetailLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title h5 mb-0" id="studentCourseDetailLabel">Course Details</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="studentCourseDetailBody">
+                    <div class="text-muted">Loading details...</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{% static 'js/script.js' %}"></script>
 </body>
 </html>

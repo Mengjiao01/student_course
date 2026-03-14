@@ -73,13 +73,19 @@ def _build_course_detail(course, *, is_enrolled):
     enrolled_count = course.enrolled_total
     is_full = enrolled_count >= course.capacity
 
-    # The frontend can use these flags directly to decide whether the
-    # existing enrollment API should enable or disable the enroll button.
+    # Build the payload used by the student course detail modal.
     return {
         "id": course.id,
+        "course_code": course.course_code or "Not set",
         "course_name": course.course_name,
+        "schedule": course.schedule or "Not set",
+        "location": course.location or "Not set",
+        "start_date": course.start_date.isoformat() if course.start_date else "Not set",
+        "end_date": course.end_date.isoformat() if course.end_date else "Not set",
+        "description": course.description or "Not set",
+        "delivery_mode": course.get_delivery_mode_display(),
         "credits": course.credits,
-        "teacher_name": course.teacher_names_display(),
+        "teacher_name": course.teacher_names_display() or "Unassigned",
         "enrolled_count": enrolled_count,
         "capacity": course.capacity,
         "is_enrolled": is_enrolled,
@@ -144,6 +150,7 @@ def student_course_detail(request, course_id):
             code="course_not_found",
         )
 
+    # Mark whether the current student has already selected this course.
     is_enrolled = Enrollment.objects.filter(student=student, course=course).exists()
 
     return _json_response(

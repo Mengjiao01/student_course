@@ -76,14 +76,38 @@ class StudentCourseApiTests(TestCase):
         payload = response.json()
         course_data = payload["data"]["course"]
         self.assertEqual(payload["code"], "course_detail_loaded")
+        self.assertEqual(course_data["course_code"], "CS101")
         self.assertEqual(course_data["course_name"], "Software Testing")
         self.assertEqual(course_data["credits"], 3)
         self.assertEqual(course_data["teacher_name"], "teacher1")
+        self.assertEqual(course_data["schedule"], "Not set")
+        self.assertEqual(course_data["location"], "Not set")
+        self.assertEqual(course_data["start_date"], "Not set")
+        self.assertEqual(course_data["end_date"], "Not set")
+        self.assertEqual(course_data["description"], "Not set")
+        self.assertEqual(course_data["delivery_mode"], "Lecture")
         self.assertEqual(course_data["enrolled_count"], 1)
         self.assertEqual(course_data["capacity"], 2)
         self.assertTrue(course_data["is_enrolled"])
         self.assertFalse(course_data["is_full"])
         self.assertFalse(course_data["can_enroll"])
+
+    def test_course_detail_returns_extended_course_fields(self):
+        self.course.schedule = "Monday 08:00-10:00"
+        self.course.location = "Room 301"
+        self.course.description = "Core testing principles and tooling."
+        self.course.delivery_mode = "seminar"
+        self.course.save(update_fields=["schedule", "location", "description", "delivery_mode"])
+        self.client.login(username="student1", password="pass123456")
+
+        response = self.client.get(reverse("student_course_detail", args=[self.course.id]))
+
+        self.assertEqual(response.status_code, 200)
+        course_data = response.json()["data"]["course"]
+        self.assertEqual(course_data["schedule"], "Monday 08:00-10:00")
+        self.assertEqual(course_data["location"], "Room 301")
+        self.assertEqual(course_data["description"], "Core testing principles and tooling.")
+        self.assertEqual(course_data["delivery_mode"], "Seminar")
 
     def test_course_detail_marks_full_course_as_unavailable(self):
         other_user = User.objects.create_user(username="student2", password="pass123456")

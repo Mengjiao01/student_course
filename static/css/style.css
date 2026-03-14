@@ -301,24 +301,32 @@
 }
 
 .page-student-dashboard {
-    background: linear-gradient(180deg, #eef4fb 0%, #f8fbff 100%);
+    background: #f4f7fb;
 }
 
-.page-student-dashboard .topbar {
-    background: #ffffff;
-    border-bottom: 1px solid #dbe3ec;
+.page-student-dashboard .shell {
+    max-width: 1280px;
 }
 
-.page-student-dashboard .stats-card,
-.page-student-dashboard .toolbar-card,
-.page-student-dashboard .content-card {
+.page-student-dashboard .hero,
+.page-student-dashboard .panel,
+.page-student-dashboard .stats-card {
     border: 0;
-    border-radius: 1rem;
-    box-shadow: 0 12px 30px rgba(31, 56, 88, 0.08);
+    border-radius: 22px;
+    box-shadow: 0 18px 48px rgba(44, 62, 80, 0.10);
+}
+
+.page-student-dashboard .hero {
+    background: linear-gradient(135deg, #123c69, #2f6f8f);
+    color: #fff;
 }
 
 .page-student-dashboard .stats-card {
-    background: linear-gradient(135deg, #ffffff, #f2f7ff);
+    background: linear-gradient(135deg, #ffffff, #f5f9fd);
+}
+
+.page-student-dashboard .stats-row {
+    align-items: stretch;
 }
 
 .page-student-dashboard .stats-label {
@@ -335,9 +343,13 @@
     font-weight: 700;
 }
 
+.page-student-dashboard .stats-value-sm {
+    font-size: 1.35rem;
+}
+
 .page-student-dashboard .tab-button {
-    min-width: 170px;
-    border-radius: 999px;
+    min-width: 190px;
+    border-radius: 12px;
     font-weight: 600;
     padding: 0.75rem 1.25rem;
 }
@@ -359,6 +371,12 @@
     color: #0d6efd;
 }
 
+.page-student-dashboard .panel .table thead th {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #47596d;
+}
+
 .page-student-dashboard .empty-state {
     min-height: 280px;
     display: flex;
@@ -375,6 +393,107 @@
 .page-student-dashboard .course-table th,
 .page-student-dashboard .course-table td {
     vertical-align: middle;
+}
+
+.page-student-dashboard .course-table tbody tr {
+    transition: background-color 0.18s ease;
+}
+
+.page-student-dashboard .course-table tbody tr:hover {
+    background-color: rgba(18, 60, 105, 0.03);
+}
+
+.page-student-dashboard .course-detail-trigger {
+    color: #123c69;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.page-student-dashboard .course-detail-trigger:hover,
+.page-student-dashboard .course-detail-trigger:focus {
+    color: #0b62b0;
+    text-decoration: underline;
+}
+
+.page-student-dashboard .btn-primary {
+    background: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.page-student-dashboard .btn-outline-danger,
+.page-student-dashboard .btn-secondary,
+.page-student-dashboard .btn-primary {
+    min-width: 110px;
+}
+
+.page-student-dashboard .student-withdraw-modal .modal-content {
+    border: 0;
+    border-radius: 20px;
+    box-shadow: 0 24px 60px rgba(15, 33, 54, 0.18);
+}
+
+.page-student-dashboard .student-withdraw-modal .modal-header,
+.page-student-dashboard .student-withdraw-modal .modal-footer {
+    border-color: #e8edf5;
+}
+
+.page-student-dashboard .student-withdraw-modal .withdraw-course-name {
+    padding: 14px 16px;
+    border-radius: 14px;
+    background: #f4f8fd;
+    color: #123c69;
+    font-weight: 600;
+}
+
+.page-student-dashboard .student-course-detail-modal .modal-content {
+    border: 0;
+    border-radius: 20px;
+    box-shadow: 0 24px 60px rgba(15, 33, 54, 0.18);
+}
+
+.page-student-dashboard .student-course-summary {
+    border-radius: 20px;
+    background: linear-gradient(135deg, #f2f7fb, #ecf0eb);
+    padding: 1.5rem;
+}
+
+.page-student-dashboard .student-summary-card {
+    height: 100%;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.82);
+    padding: 1rem 1.1rem;
+}
+
+.page-student-dashboard .student-summary-label {
+    color: #6c757d;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.35rem;
+}
+
+.page-student-dashboard .student-summary-value {
+    color: #18364a;
+    font-weight: 600;
+    line-height: 1.45;
+    word-break: break-word;
+}
+
+.page-student-dashboard .student-course-summary-badge {
+    font-size: 1rem !important;
+    font-weight: 600;
+    line-height: 1.45;
+    padding: 0.7rem 1rem !important;
+}
+
+@media (max-width: 576px) {
+    .page-student-dashboard .student-course-summary {
+        padding: 1rem;
+    }
+
+    .page-student-dashboard .tab-button {
+        width: 100%;
+    }
 }
 
 .page-teacher-course-students {
