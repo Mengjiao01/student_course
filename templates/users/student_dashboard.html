@@ -112,12 +112,19 @@
                                             <td>{{ course.credits }}</td>
                                             <td>{{ course.enrolled_total }}/{{ course.capacity }}</td>
                                             <td class="text-end">
-                                                <form method="post" class="d-inline">
+                                                <form method="post" class="d-inline" data-withdraw-form>
                                                     {% csrf_token %}
+                                                    {# Hidden fields tell the shared POST handler which course to drop and which tab to return to. #}
                                                     <input type="hidden" name="action" value="withdraw">
                                                     <input type="hidden" name="course_id" value="{{ course.id }}">
                                                     <input type="hidden" name="tab" value="enrolled">
-                                                    <button type="submit" class="btn btn-outline-danger btn-sm">Drop</button>
+                                                    <button
+                                                        type="submit"
+                                                        class="btn btn-outline-danger btn-sm"
+                                                        data-withdraw-course="{{ course.course_name }}"
+                                                    >
+                                                        Drop
+                                                    </button>
                                                 </form>
                                             </td>
                                         </tr>
@@ -169,6 +176,7 @@
                                                 {% else %}
                                                     <form method="post" class="d-inline">
                                                         {% csrf_token %}
+                                                        {# Hidden fields tell the shared POST handler which course to enroll in and which tab to show after redirect. #}
                                                         <input type="hidden" name="action" value="enroll">
                                                         <input type="hidden" name="course_id" value="{{ course.id }}">
                                                         <input type="hidden" name="tab" value="courses">

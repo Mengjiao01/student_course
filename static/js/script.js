@@ -125,7 +125,38 @@ function initAdminCourseFormValidation() {
     });
 }
 
+function initStudentWithdrawConfirmation() {
+    if (!document.body.classList.contains("page-student-dashboard")) {
+        return;
+    }
+
+    const withdrawButtons = document.querySelectorAll("[data-withdraw-course]");
+    if (!withdrawButtons.length) {
+        return;
+    }
+
+    withdrawButtons.forEach((button) => {
+        button.addEventListener("click", (event) => {
+            const courseName = button.getAttribute("data-withdraw-course") || "this course";
+            // Require an explicit confirmation before allowing a drop action.
+            const confirmed = window.confirm(`Are you sure you want to drop "${courseName}"?`);
+
+            if (!confirmed) {
+                event.preventDefault();
+                return;
+            }
+
+            const form = button.closest("form");
+            if (form) {
+                // Submit manually after confirmation so the browser does not treat this as an accidental click.
+                form.submit();
+            }
+        });
+    });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     initAdminCourseDetailModal();
     initAdminCourseFormValidation();
+    initStudentWithdrawConfirmation();
 });

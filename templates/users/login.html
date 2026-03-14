@@ -10,40 +10,48 @@
       rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
-<body class="bg-light page-login">
-<div class="container mt-5 login-shell">
-    <div class="card shadow-sm">
-        <div class="card-body p-4">
-            <h3 class="text-center mb-4">Course Management Login</h3>
+<body class="page-login">
+<div class="login-scene">
+    <div class="login-lines login-lines-left" aria-hidden="true"></div>
+    <div class="login-lines login-lines-right" aria-hidden="true"></div>
+    <div class="login-glow login-glow-top" aria-hidden="true"></div>
+    <div class="login-glow login-glow-bottom" aria-hidden="true"></div>
 
-            {% if form.non_field_errors %}
-                <div class="alert alert-danger">
-                    {% for error in form.non_field_errors %}
-                        <div>{{ error }}</div>
-                    {% endfor %}
-                </div>
-            {% endif %}
+    <div class="container login-shell">
+        <div class="login-card">
+            <div class="login-card-body">
+                <p class="login-eyebrow mb-2">Student Course System</p>
+                <h3 class="text-center mb-4">Course Management Login</h3>
 
-            <form method="post" autocomplete="off">
-                {% csrf_token %}
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
 
-                <div class="mb-3">
-                    <label class="form-label">{{ form.username.label }}</label>
-                    {{ form.username }}
-                </div>
+                <form method="post" autocomplete="off">
+                    {% csrf_token %}
 
-                <div class="mb-3">
-                    <label class="form-label">{{ form.password.label }}</label>
-                    {{ form.password }}
-                </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.username.label }}</label>
+                        {{ form.username }}
+                    </div>
 
-                <div class="mb-3">
-                    <label class="form-label">{{ form.role.label }}</label>
-                    {{ form.role }}
-                </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.password.label }}</label>
+                        {{ form.password }}
+                    </div>
 
-                <button class="btn btn-primary w-100" type="submit">Sign In</button>
-            </form>
+                    <div class="mb-4">
+                        <label class="form-label">{{ form.role.label }}</label>
+                        {{ form.role }}
+                    </div>
+
+                    <button class="btn btn-primary w-100 login-submit" type="submit">Sign In</button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
