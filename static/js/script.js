@@ -1,5 +1,6 @@
 // Shared static entry point for template scripts.
 
+// Escape API data before injecting it into modal markup.
 function escapeHtml(value) {
     return String(value)
         .replace(/&/g, "&amp;")
@@ -9,6 +10,7 @@ function escapeHtml(value) {
         .replace(/'/g, "&#39;");
 }
 
+// Load teacher and student details into the shared admin modal on demand.
 function initAdminCourseDetailModal() {
     if (!document.body.classList.contains("page-admin-course-detail")) {
         return;
@@ -23,6 +25,7 @@ function initAdminCourseDetailModal() {
     const modalBody = document.getElementById("detailModalBody");
     const detailModal = new window.bootstrap.Modal(modalElement);
 
+    // Keep the modal responsive while the detail request is in flight.
     function renderLoadingState() {
         modalTitle.textContent = "Loading details";
         modalBody.innerHTML = '<div class="text-muted">Loading details...</div>';
@@ -44,6 +47,7 @@ function initAdminCourseDetailModal() {
         `).join("");
     }
 
+    // Delegate click handling so dynamically rendered triggers work as well.
     document.addEventListener("click", async (event) => {
         const trigger = event.target.closest("[data-detail-trigger]");
         if (!trigger) {
@@ -79,6 +83,9 @@ function initAdminCourseDetailModal() {
 }
 
 
+
+
+// Validate the comma-separated teacher ID input before the form submits.
 function initAdminCourseFormValidation() {
     if (!document.body.classList.contains("page-admin-course-form")) {
         return;
@@ -93,6 +100,7 @@ function initAdminCourseFormValidation() {
 
     const teacherIdPattern = /^T\d{8}$/;
 
+    // Split, trim, and discard empty fragments from the admin input string.
     function parseTeacherIds(value) {
         return value
             .split(",")
@@ -125,6 +133,7 @@ function initAdminCourseFormValidation() {
     });
 }
 
+// Require an explicit confirmation before submitting a withdraw request.
 function initStudentWithdrawConfirmation() {
     if (!document.body.classList.contains("page-student-dashboard")) {
         return;
@@ -167,6 +176,7 @@ function initStudentWithdrawConfirmation() {
     });
 }
 
+// Reuse a single modal to show course details for any course row on the student page.
 function initStudentCourseDetailModal() {
     if (!document.body.classList.contains("page-student-dashboard")) {
         return;
@@ -305,6 +315,7 @@ function initStudentCourseDetailModal() {
     });
 }
 
+// Initialize only the page-specific behaviors that match the current body class.
 document.addEventListener("DOMContentLoaded", () => {
     initAdminCourseDetailModal();
     initAdminCourseFormValidation();

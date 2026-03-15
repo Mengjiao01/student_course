@@ -26,8 +26,8 @@
                 <div class="card-body p-4">
                     <span class="badge rounded-pill mb-3">Module 01</span>
                     <h2 class="h4">Student Management</h2>
-                    <p class="text-muted">Reserved entry for future student list, detail, and academic status features.</p>
-                    <a href="{% url 'admin_module_placeholder' 'students' %}" class="btn btn-outline-dark">Open</a>
+                    <p class="text-muted">Support adding, modifying, and querying student information.</p>
+                    <button type="button" class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#adminModuleStatusModal">Open</button>
                 </div>
             </div>
         </div>
@@ -36,8 +36,8 @@
                 <div class="card-body p-4">
                     <span class="badge rounded-pill mb-3">Module 02</span>
                     <h2 class="h4">Teacher Management</h2>
-                    <p class="text-muted">Reserved entry for future teacher list, detail, and faculty maintenance features.</p>
-                    <a href="{% url 'admin_module_placeholder' 'teachers' %}" class="btn btn-outline-dark">Open</a>
+                    <p class="text-muted">Support adding, modifying, and querying teacher information.</p>
+                    <button type="button" class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#adminModuleStatusModal">Open</button>
                 </div>
             </div>
         </div>
@@ -46,8 +46,8 @@
                 <div class="card-body p-4">
                     <span class="badge rounded-pill mb-3">Module 03</span>
                     <h2 class="h4">Administrator Management</h2>
-                    <p class="text-muted">Reserved entry for future administrator account and permission maintenance.</p>
-                    <a href="{% url 'admin_module_placeholder' 'admins' %}" class="btn btn-outline-dark">Open</a>
+                    <p class="text-muted">Support adding, modifying, and querying administrator information.</p>
+                    <button type="button" class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#adminModuleStatusModal">Open</button>
                 </div>
             </div>
         </div>
@@ -59,6 +59,23 @@
                     <p class="text-muted">Supports course listing, publishing, editing, and detailed viewing.</p>
                     <a href="{% url 'admin_course_list' %}" class="btn btn-dark">Open</a>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade admin-module-status-modal" id="adminModuleStatusModal" tabindex="-1" aria-labelledby="adminModuleStatusLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title h5 mb-0" id="adminModuleStatusLabel">！！！</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">This page is under development.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>

@@ -36,11 +36,6 @@ urlpatterns = [
         name="teacher_course_students",
     ),
     path("admin-page/", views.admin_dashboard, name="admin_dashboard"),
-    path(
-        "admin-page/modules/<slug:module_name>/",
-        views.admin_module_placeholder,
-        name="admin_module_placeholder",
-    ),
     path("admin-page/courses/", views.admin_course_list, name="admin_course_list"),
     path(
         "admin-page/courses/create/",

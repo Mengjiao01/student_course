@@ -37,6 +37,7 @@ class Course(models.Model):
         return self.course_code or self.course_name
 
     def enrolled_count(self):
+        # Centralize the enrollment count so templates and views share one source.
         return self.enrollment_set.count()
 
     def meeting_display(self):
@@ -45,6 +46,7 @@ class Course(models.Model):
         return " | ".join(parts)
 
     def teacher_list(self):
+        # Prefer the many-to-many assignments, but keep the legacy single-teacher fallback.
         assigned_teachers = list(self.teachers.select_related("user").all())
         if assigned_teachers:
             return assigned_teachers
@@ -53,5 +55,6 @@ class Course(models.Model):
         return []
 
     def teacher_names_display(self):
+        # Collapse the teacher objects into a template-friendly display string.
         names = [teacher.display_name() for teacher in self.teacher_list()]
         return ", ".join(filter(None, names))

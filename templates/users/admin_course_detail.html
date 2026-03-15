@@ -117,7 +117,7 @@
                             {% for teacher in teacher_page_obj %}
                                 <tr>
                                     <td>{{ teacher.staff_id }}</td>
-                                    <td><a href="#" data-detail-trigger data-detail-url="{% url 'admin_teacher_detail_modal' teacher.id %}">{{ teacher.display_name }}</a></td>
+                                    <td><button type="button" class="btn btn-link detail-trigger-pill p-0 text-start" data-detail-trigger data-detail-url="{% url 'admin_teacher_detail_modal' teacher.id %}">{{ teacher.display_name }}</button></td>
                                     <td>{{ teacher.title|default:'Not set' }}</td>
                                     <td>{{ teacher.department|default:'Not set' }}</td>
                                 </tr>
@@ -177,7 +177,7 @@
                             {% for enrollment in student_page_obj %}
                                 <tr>
                                     <td>{{ enrollment.student.student_id }}</td>
-                                    <td><a href="#" data-detail-trigger data-detail-url="{% url 'admin_student_detail_modal' enrollment.student.id %}">{{ enrollment.student.display_name }}</a></td>
+                                    <td><button type="button" class="btn btn-link detail-trigger-pill p-0 text-start" data-detail-trigger data-detail-url="{% url 'admin_student_detail_modal' enrollment.student.id %}">{{ enrollment.student.display_name }}</button></td>
                                     <td>{{ enrollment.student.major|default:'Not set' }}</td>
                                     <td>{{ enrollment.enrolled_at|date:'Y-m-d H:i' }}</td>
                                 </tr>

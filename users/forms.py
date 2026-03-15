@@ -117,6 +117,7 @@ class AdminCourseForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        # Rehydrate the assigned teacher IDs when an existing course is edited.
         super().__init__(*args, **kwargs)
         self.fields["start_date"].input_formats = ["%Y-%m-%d"]
         self.fields["end_date"].input_formats = ["%Y-%m-%d"]
@@ -126,11 +127,13 @@ class AdminCourseForm(forms.ModelForm):
             )
 
     def clean_teacher_staff_ids(self):
+        # Convert the comma-separated teacher IDs into ordered Teacher objects.
         raw_value = self.cleaned_data["teacher_staff_ids"]
         staff_ids = [staff_id.strip() for staff_id in raw_value.split(",") if staff_id.strip()]
         if not staff_ids:
             return []
 
+        # Query once, then rebuild the teacher list in the same order the admin entered.
         teachers = list(Teacher.objects.filter(staff_id__in=staff_ids).select_related("user"))
         teacher_map = {teacher.staff_id: teacher for teacher in teachers}
         missing_ids = [staff_id for staff_id in staff_ids if staff_id not in teacher_map]
@@ -140,6 +143,7 @@ class AdminCourseForm(forms.ModelForm):
         return [teacher_map[staff_id] for staff_id in staff_ids]
 
     def clean(self):
+        # Validate the term date range after the field-level validators run.
         cleaned_data = super().clean()
         start_date = cleaned_data.get("start_date")
         end_date = cleaned_data.get("end_date")
@@ -148,6 +152,7 @@ class AdminCourseForm(forms.ModelForm):
         return cleaned_data
 
     def save(self, commit=True):
+        # Keep the legacy single-teacher field aligned with the many-to-many teacher list.
         course = super().save(commit=False)
         if not course.capacity:
             course.capacity = 50
@@ -164,6 +169,7 @@ class AdminCourseForm(forms.ModelForm):
         return course
 
     def save_m2m(self):
+        # When commit=False is used, apply the pending teacher assignments after the instance exists.
         super().save_m2m()
         if hasattr(self, "_pending_teachers"):
             self.instance.teachers.set(self._pending_teachers)

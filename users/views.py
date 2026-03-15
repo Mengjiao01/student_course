@@ -15,7 +15,7 @@ from .forms import AdminCourseForm, LoginForm
 from .models import Profile, Student, Teacher
 from .utils import get_user_role
 
-# Role to dashboard mapping
+# Keep the dashboard routing in one place so login and redirects stay consistent.
 def _get_dashboard_url(role):
     role_to_url = {
         "student": "student_dashboard",
@@ -26,12 +26,14 @@ def _get_dashboard_url(role):
 
 
 def _admin_only(request):
+    # Reuse the same guard across all admin-facing views.
     if get_user_role(request.user) != "admin":
         return HttpResponseForbidden("You do not have permission to access this page.")
     return None
 
 
 def _teacher_detail_payload(teacher):
+    # The admin detail modal expects a flat title/fields payload.
     return {
         "title": "Teacher Details",
         "fields": [
@@ -46,6 +48,7 @@ def _teacher_detail_payload(teacher):
 
 
 def _student_detail_payload(student):
+    # The student modal uses the same payload shape as the teacher modal.
     return {
         "title": "Student Details",
         "fields": [
@@ -61,10 +64,12 @@ def _student_detail_payload(student):
 
 
 def _teacher_course_queryset():
+    # Load related teacher records up front to avoid repeated queries in templates.
     return Course.objects.select_related("teacher__user").prefetch_related("teachers__user")
 
 
 def _course_admin_queryset():
+    # Admin and student pages both need teacher data plus an enrollment total.
     return (
         Course.objects.select_related("teacher__user")
         .prefetch_related("teachers__user")
@@ -73,7 +78,7 @@ def _course_admin_queryset():
 
 
 def _get_login_user(selected_role, login_id):
-    #Role-specific ID lookup
+    # Resolve the submitted business ID against the selected role only.
     if selected_role == "student":
         student = Student.objects.select_related("user").filter(student_id=login_id).first()
         return student.user if student else None
@@ -87,7 +92,7 @@ def _get_login_user(selected_role, login_id):
 
 
 def _get_login_user_by_any_id(login_id):
-    #Any-role ID lookup
+    # Use a broader lookup to detect "valid ID but wrong role" cases.
     student = Student.objects.select_related("user").filter(student_id=login_id).first()
     if student:
         return student.user
@@ -105,23 +110,21 @@ def _get_login_user_by_any_id(login_id):
 def login_view(request):
     form = LoginForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
-        #Submitted credentials
+        # Pull the cleaned credentials once so the flow below stays readable.
         login_id = form.cleaned_data["login_id"].strip()
         password = form.cleaned_data["password"]
         selected_role = form.cleaned_data["role"]
 
-        
         user = _get_login_user(selected_role, login_id)
         if user is not None:
-            #cheak password
+            # Password validation happens after the business ID resolves to a user.
             if not user.check_password(password):
                 form.add_error(None, "Invalid ID or password.")
             else:
-                
                 login(request, user)
                 return redirect(_get_dashboard_url(selected_role))
         else:
-            #role mismatch fallback
+            # A second lookup lets the UI explain role mismatches more clearly.
             user = _get_login_user_by_any_id(login_id)
             if user is not None and user.check_password(password):
                 form.add_error(None, "The selected role does not match this account.")
@@ -147,7 +150,7 @@ def dashboard_redirect(request):
 
 
 def _handle_student_enrollment(request, student):
-    #use one POST entry point for both enroll and withdraw actions
+    # Route both enroll and withdraw actions through one POST handler.
     action = request.POST.get("action")
     course_id = request.POST.get("course_id")
 
@@ -158,7 +161,7 @@ def _handle_student_enrollment(request, student):
     course = get_object_or_404(Course, pk=course_id)
 
     if action == "enroll":
-        #prevent duplicate enrollments before checking remaining capacity
+        # Prevent duplicate rows before checking seat availability.
         if Enrollment.objects.filter(student=student, course=course).exists():
             messages.warning(request, "You are already enrolled in this course.")
             return
@@ -171,7 +174,7 @@ def _handle_student_enrollment(request, student):
         messages.success(request, "Enrollment successful.")
         return
 
-    #remove the student's enrollment record for the selected course
+    # Withdraw by removing the student's enrollment row for that course.
     deleted_count, _ = Enrollment.objects.filter(student=student, course=course).delete()
     if deleted_count:
         messages.success(request, "Course dropped successfully.")
@@ -188,7 +191,7 @@ def student_dashboard(request):
     student = get_object_or_404(Student, user=request.user)
 
     if request.method == "POST":
-        #redirect back to the current tab
+        # Send the user back to the tab they submitted from after the action completes.
         _handle_student_enrollment(request, student)
         active_tab = request.POST.get("tab", "courses")
         return redirect(f"{request.path}?tab={active_tab}")
@@ -204,11 +207,19 @@ def student_dashboard(request):
     enrolled_courses = all_courses.filter(id__in=enrolled_course_ids)
     total_credits = sum(course.credits for course in enrolled_courses)
 
+    # Keep the two dashboard tables paginated independently.
+    all_courses_page_obj = Paginator(all_courses, 10).get_page(request.GET.get("courses_page"))
+    enrolled_courses_page_obj = Paginator(enrolled_courses, 10).get_page(
+        request.GET.get("enrolled_page")
+    )
+
     context = {
         "student": student,
         "active_tab": active_tab,
-        "all_courses": all_courses,
-        "enrolled_courses": enrolled_courses,
+        "all_courses": all_courses_page_obj.object_list,
+        "all_courses_page_obj": all_courses_page_obj,
+        "enrolled_courses": enrolled_courses_page_obj.object_list,
+        "enrolled_courses_page_obj": enrolled_courses_page_obj,
         "enrolled_course_ids": enrolled_course_ids,
         "enrolled_course_count": len(enrolled_course_ids),
         "total_credits": total_credits,
@@ -225,6 +236,8 @@ def teacher_dashboard(request):
     query = request.GET.get("q", "").strip()
     sort = request.GET.get("sort", "name")
 
+    # Teachers can see courses from either the legacy single-teacher field
+    # or the newer many-to-many assignment list.
     course_list = (
         _teacher_course_queryset()
         .filter(Q(teacher=teacher) | Q(teachers=teacher))
@@ -236,6 +249,7 @@ def teacher_dashboard(request):
             Q(course_name__icontains=query) | Q(course_code__icontains=query)
         )
 
+    # Map the UI sort options to concrete ORM order clauses.
     sort_map = {
         "name": "course_name",
         "name_desc": "-course_name",
@@ -273,6 +287,7 @@ def teacher_course_students(request, course_id):
 
     query = request.GET.get("q", "").strip()
 
+    # Load roster entries with their student account in one query.
     enrollments = Enrollment.objects.filter(course=course).select_related(
         "student__user"
     ).order_by("student__student_id", "id")
@@ -307,30 +322,6 @@ def admin_dashboard(request):
     return render(request, "users/admin_dashboard.html", {"admin_id": request.user.profile.admin_id})
 
 
-@login_required
-def admin_module_placeholder(request, module_name):
-    forbidden_response = _admin_only(request)
-    if forbidden_response is not None:
-        return forbidden_response
-
-    module_labels = {
-        "students": "Student Management",
-        "teachers": "Teacher Management",
-        "admins": "Administrator Management",
-    }
-    module_label = module_labels.get(module_name)
-    if module_label is None:
-        return redirect("admin_dashboard")
-
-    return render(
-        request,
-        "users/admin_module_placeholder.html",
-        {
-            "module_label": module_label,
-        },
-    )
-
-#verify
 @login_required
 def admin_course_list(request):
     forbidden_response = _admin_only(request)
@@ -433,6 +424,7 @@ def admin_course_detail(request, course_id):
     teacher_query = request.GET.get("teacher_q", "").strip()
     student_query = request.GET.get("student_q", "").strip()
 
+    # Teacher assignments are already materialized as objects, so filter them in Python.
     teachers = course.teacher_list()
     if teacher_query:
         lowered_query = teacher_query.lower()
@@ -443,6 +435,7 @@ def admin_course_detail(request, course_id):
         ]
     teacher_page_obj = Paginator(teachers, 5).get_page(request.GET.get("teacher_page"))
 
+    # Student roster filtering stays in SQL because the list can grow much larger.
     enrollments = Enrollment.objects.filter(course=course).select_related("student__user")
     if student_query:
         enrollments = enrollments.filter(
@@ -474,6 +467,7 @@ def admin_teacher_detail_modal(request, teacher_id):
         return forbidden_response
 
     teacher = get_object_or_404(Teacher.objects.select_related("user"), pk=teacher_id)
+    # Return JSON because the modal is rendered client-side.
     return JsonResponse(_teacher_detail_payload(teacher))
 
 
@@ -484,6 +478,7 @@ def admin_student_detail_modal(request, student_id):
         return forbidden_response
 
     student = get_object_or_404(Student.objects.select_related("user"), pk=student_id)
+    # Return JSON because the modal is rendered client-side.
     return JsonResponse(_student_detail_payload(student))
 
 

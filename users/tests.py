@@ -173,6 +173,53 @@ class StudentDashboardTests(TestCase):
             Enrollment.objects.filter(student=self.student, course=self.course).exists()
         )
 
+    def test_student_dashboard_paginates_available_courses_by_ten(self):
+        for index in range(11):
+            Course.objects.create(
+                course_code=f"CS2{index:02d}",
+                course_name=f"Available Course {index:02d}",
+                credits=3,
+                capacity=30,
+                delivery_mode="lecture",
+            )
+
+        self.client.login(username="stu1", password="pass123456")
+
+        first_page = self.client.get(reverse("student_dashboard"), {"tab": "courses"})
+        self.assertEqual(first_page.status_code, 200)
+        self.assertEqual(first_page.context["all_courses_page_obj"].paginator.per_page, 10)
+        self.assertEqual(first_page.context["all_courses_page_obj"].paginator.count, 12)
+        self.assertEqual(len(first_page.context["all_courses_page_obj"].object_list), 10)
+
+        second_page = self.client.get(reverse("student_dashboard"), {"tab": "courses", "courses_page": 2})
+        self.assertEqual(second_page.status_code, 200)
+        self.assertEqual(second_page.context["all_courses_page_obj"].number, 2)
+        self.assertEqual(len(second_page.context["all_courses_page_obj"].object_list), 2)
+
+    def test_student_dashboard_paginates_enrolled_courses_by_ten(self):
+        for index in range(11):
+            extra_course = Course.objects.create(
+                course_code=f"ENR{index:02d}",
+                course_name=f"Enrolled Course {index:02d}",
+                credits=2,
+                capacity=25,
+                delivery_mode="seminar",
+            )
+            Enrollment.objects.create(student=self.student, course=extra_course)
+
+        self.client.login(username="stu1", password="pass123456")
+
+        first_page = self.client.get(reverse("student_dashboard"), {"tab": "enrolled"})
+        self.assertEqual(first_page.status_code, 200)
+        self.assertEqual(first_page.context["enrolled_courses_page_obj"].paginator.per_page, 10)
+        self.assertEqual(first_page.context["enrolled_courses_page_obj"].paginator.count, 11)
+        self.assertEqual(len(first_page.context["enrolled_courses_page_obj"].object_list), 10)
+
+        second_page = self.client.get(reverse("student_dashboard"), {"tab": "enrolled", "enrolled_page": 2})
+        self.assertEqual(second_page.status_code, 200)
+        self.assertEqual(second_page.context["enrolled_courses_page_obj"].number, 2)
+        self.assertEqual(len(second_page.context["enrolled_courses_page_obj"].object_list), 1)
+
 
 class TeacherDashboardTests(TestCase):
     def setUp(self):

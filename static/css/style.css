@@ -109,6 +109,28 @@
     display: inline-block;
 }
 
+
+.page-admin-course-detail .detail-trigger-pill {
+    display: inline-block;
+    max-width: 100%;
+    color: #123c69;
+    font-weight: 800;
+    line-height: 1.35;
+    text-decoration: none;
+    border: 0;
+    background: transparent;
+    border-bottom: 2px solid #9dc2e5;
+    padding: 0 0 0.08rem;
+    transition: color 0.16s ease, border-color 0.16s ease;
+}
+
+.page-admin-course-detail .detail-trigger-pill:hover,
+.page-admin-course-detail .detail-trigger-pill:focus {
+    color: #2f6f8f;
+    border-color: #2f6f8f;
+    text-decoration: none;
+}
+
 .page-admin-course-detail .detail-modal .modal-content {
     border: 0;
     border-radius: 20px;
@@ -136,26 +158,6 @@
     color: #18364a;
     font-weight: 600;
     line-height: 1.45;
-}
-
-.page-admin-teacher-detail,
-.page-admin-student-detail,
-.page-admin-module-placeholder {
-    background: #f7f8fb;
-}
-
-.page-admin-teacher-detail .shell,
-.page-admin-student-detail .shell,
-.page-admin-module-placeholder .shell {
-    max-width: 900px;
-}
-
-.page-admin-teacher-detail .panel,
-.page-admin-student-detail .panel,
-.page-admin-module-placeholder .panel {
-    border: 0;
-    border-radius: 20px;
-    box-shadow: 0 18px 48px rgba(44, 62, 80, 0.08);
 }
 
 .page-admin-dashboard {
@@ -407,15 +409,22 @@
 }
 
 .page-student-dashboard .course-detail-trigger {
+    display: inline-block;
+    max-width: 100%;
     color: #123c69;
-    font-weight: 600;
+    font-weight: 800;
+    line-height: 1.35;
     text-decoration: none;
+    border-bottom: 2px solid #9dc2e5;
+    padding-bottom: 0.08rem;
+    transition: color 0.16s ease, border-color 0.16s ease;
 }
 
 .page-student-dashboard .course-detail-trigger:hover,
 .page-student-dashboard .course-detail-trigger:focus {
-    color: #0b62b0;
-    text-decoration: underline;
+    color: #2f6f8f;
+    border-color: #2f6f8f;
+    text-decoration: none;
 }
 
 .page-student-dashboard .btn-primary {

@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 
 
 class Profile(models.Model):
+    # Profile stores the application role plus the admin-facing business ID.
     ROLE_CHOICES = [
         ('student', 'Student'),
         ('teacher', 'Teacher'),
@@ -18,6 +19,7 @@ class Profile(models.Model):
 
 
 class Student(models.Model):
+    # Student keeps academic profile fields alongside the linked auth user.
     LEVEL_CHOICES = [
         ("bachelor", "Bachelor"),
         ("master", "Master"),
@@ -37,11 +39,13 @@ class Student(models.Model):
         return f"{self.user.username} - {self.student_id}"
 
     def display_name(self):
+        # Prefer the full name, but fall back to the username when names are blank.
         full_name = self.user.get_full_name().strip()
         return full_name or self.user.username
 
 
 class Teacher(models.Model):
+    # Teacher mirrors the student pattern with staff-specific profile fields.
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     staff_id = models.CharField(max_length=20, unique=True)
     department = models.CharField(max_length=100, blank=True, default="")
@@ -52,5 +56,6 @@ class Teacher(models.Model):
         return f"{self.user.username} - {self.staff_id}"
 
     def display_name(self):
+        # Prefer the full name, but fall back to the username when names are blank.
         full_name = self.user.get_full_name().strip()
         return full_name or self.user.username
