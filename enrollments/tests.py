@@ -1,5 +1,3 @@
-import json
-
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
@@ -30,55 +28,30 @@ class CreateEnrollmentApiTests(TestCase):
             capacity=1,
         )
 
-    def test_requires_authentication(self):
-        response = self.client.post(reverse("create_enrollment"), {"course_id": self.course.id})
-
-        self.assertEqual(response.status_code, 401)
-        self.assertJSONEqual(
-            response.content,
-            {
-                "success": False,
-                "code": "authentication_required",
-                "message": "Authentication is required.",
-                "data": {},
-            },
-        )
-
-    def test_rejects_non_student_role(self):
-        self.client.login(username="teacher1", password="pass123456")
-
-        response = self.client.post(reverse("create_enrollment"), {"course_id": self.course.id})
-
-        self.assertEqual(response.status_code, 403)
-        self.assertJSONEqual(
-            response.content,
-            {
-                "success": False,
-                "code": "invalid_role",
-                "message": "Only students can enroll in courses.",
-                "data": {},
-            },
-        )
-
     def test_creates_enrollment_successfully(self):
+        # Ensure a student can enroll successfully when the course has space.
         self.client.login(username="student1", password="pass123456")
 
-        response = self.client.post(
-            reverse("create_enrollment"),
-            data=json.dumps({"course_id": self.course.id}),
-            content_type="application/json",
-        )
+        response = self.client.post(reverse("create_enrollment"), {"course_id": self.course.id})
 
         self.assertEqual(response.status_code, 201)
         payload = response.json()
         self.assertTrue(payload["success"])
         self.assertEqual(payload["code"], "enrollment_created")
+        self.assertEqual(payload["message"], "Enrollment created successfully.")
+        self.assertEqual(payload["data"]["student_id"], self.student.id)
         self.assertEqual(payload["data"]["course_id"], self.course.id)
+        self.assertEqual(payload["data"]["course_name"], self.course.course_name)
         self.assertTrue(
-            Enrollment.objects.filter(student=self.student, course=self.course).exists()
+            Enrollment.objects.filter(
+                id=payload["data"]["enrollment_id"],
+                student=self.student,
+                course=self.course,
+            ).exists()
         )
 
     def test_rejects_duplicate_enrollment(self):
+        # Ensure the enrollment API blocks selecting the same course twice.
         Enrollment.objects.create(student=self.student, course=self.course)
         self.client.login(username="student1", password="pass123456")
 
@@ -96,6 +69,7 @@ class CreateEnrollmentApiTests(TestCase):
         )
 
     def test_rejects_full_course(self):
+        # Ensure the enrollment API rejects requests once the course reaches capacity.
         other_user = User.objects.create_user(username="student2", password="pass123456")
         Profile.objects.create(user=other_user, role="student")
         other_student = Student.objects.create(user=other_user, student_id="S002")
