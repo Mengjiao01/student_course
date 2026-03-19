@@ -1,0 +1,108 @@
+.page-admin-course-list {
+    background: #f6f7fb;
+}
+
+.page-admin-course-list .shell {
+    max-width: 1380px;
+}
+
+.page-admin-course-list .panel {
+    border: 0;
+    border-radius: 20px;
+    box-shadow: 0 14px 40px rgba(44, 62, 80, 0.08);
+}
+
+.page-admin-course-list .hero {
+    background: linear-gradient(135deg, #16425b, #2f6690);
+    color: #fff;
+}
+
+.page-admin-course-list .table td,
+.page-admin-course-list .table th {
+    vertical-align: middle;
+}
+
+.page-admin-course-list .action-cell {
+    min-width: 160px;
+}
+
+.page-admin-course-list .action-group {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.page-admin-course-list .action-btn {
+    width: 118px;
+    border-radius: 999px;
+    font-weight: 600;
+    padding: 0.42rem 0.9rem;
+}
+
+.page-admin-course-list .action-btn-primary {
+    background: #143d59;
+    border-color: #143d59;
+    color: #fff;
+}
+
+.page-admin-course-list .action-btn-primary:hover {
+    background: #0f3148;
+    border-color: #0f3148;
+    color: #fff;
+}
+
+.page-admin-course-list .action-btn-secondary {
+    background: transparent;
+    border: 1px solid #143d59;
+    color: #143d59;
+}
+
+.page-admin-course-list .action-btn-secondary:hover {
+    background: #143d59;
+    color: #fff;
+}
+
+.page-admin-course-list .publish-btn {
+    min-width: 180px;
+    border: 0;
+    border-radius: 999px;
+    padding: 0.8rem 1.5rem;
+    background: linear-gradient(135deg, #ffd166, #ff9f1c);
+    color: #17324d;
+    font-weight: 700;
+    box-shadow: 0 14px 28px rgba(255, 159, 28, 0.34);
+}
+
+.page-admin-course-list .publish-btn:hover {
+    background: linear-gradient(135deg, #ffe08a, #ffb347);
+    color: #10273b;
+    transform: translateY(-1px);
+    box-shadow: 0 18px 34px rgba(255, 159, 28, 0.4);
+}
+
+.page-admin-course-list .search-label {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.page-admin-course-list .search-control {
+    height: 48px;
+}
+
+.page-admin-course-list .search-submit-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+}
+
+.page-admin-course-list .search-submit-btn {
+    width: 148px;
+    height: 40px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+}

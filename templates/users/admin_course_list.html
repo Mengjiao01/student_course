@@ -1,7 +1,12 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Course Management{% endblock %}
 {% block body_class %}page-admin-course-list{% endblock %}
+{% block app_styles %}
+<link rel="stylesheet" href="{% static 'css/admin-course-list.css' %}">
+{% endblock %}
+{% block core_scripts %}{% endblock %}
 
 {% block content %}
 <div class="container shell py-4 py-lg-5">

@@ -105,7 +105,6 @@ def _get_login_user_by_any_id(login_id):
     return profile.user if profile else None
 
 
-@never_cache
 @ensure_csrf_cookie
 def login_view(request):
     form = LoginForm(request.POST or None)

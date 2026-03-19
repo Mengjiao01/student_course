@@ -1,7 +1,13 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Login{% endblock %}
 {% block body_class %}page-login{% endblock %}
+{% block vendor_styles %}{% endblock %}
+{% block app_styles %}
+<link rel="stylesheet" href="{% static 'css/login.css' %}">
+{% endblock %}
+{% block core_scripts %}{% endblock %}
 
 {% block content %}
 <div class="login-scene">
@@ -10,42 +16,42 @@
     <div class="login-glow login-glow-top" aria-hidden="true"></div>
     <div class="login-glow login-glow-bottom" aria-hidden="true"></div>
 
-    <div class="container login-shell">
+    <div class="login-shell">
         <div class="login-card">
             <div class="login-card-body">
-                
-                <h3 class="text-center mb-4">Course Management Login</h3>
+                <p class="login-eyebrow">Student Course System</p>
+                <h1 class="login-title">Course Management Login</h1>
 
                 {% if form.non_field_errors %}
-                    <div class="alert alert-danger">
+                    <div class="login-alert" role="alert">
                         {% for error in form.non_field_errors %}
                             <div>{{ error }}</div>
                         {% endfor %}
                     </div>
                 {% endif %}
 
-                <form method="post" autocomplete="off">
+                <form method="post" autocomplete="off" class="login-form">
                     {% csrf_token %}
 
-                    <div class="mb-3">
+                    <div class="login-field">
                         {# ID input #}
                         <label class="form-label" for="{{ form.login_id.id_for_label }}">{{ form.login_id.label }}</label>
                         {{ form.login_id }}
                     </div>
 
-                    <div class="mb-3">
+                    <div class="login-field">
                         {# Password input #}
                         <label class="form-label" for="{{ form.password.id_for_label }}">{{ form.password.label }}</label>
                         {{ form.password }}
                     </div>
 
-                    <div class="mb-4">
+                    <div class="login-field">
                         {# Role selector #}
                         <label class="form-label" for="{{ form.role.id_for_label }}">{{ form.role.label }}</label>
                         {{ form.role }}
                     </div>
 
-                    <button class="btn btn-primary w-100 login-submit" type="submit">Sign In</button>
+                    <button class="login-submit" type="submit">Sign In</button>
                 </form>
             </div>
         </div>
